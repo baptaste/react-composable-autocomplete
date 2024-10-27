@@ -14,8 +14,11 @@ import {
   AutocompleteOption,
 } from "./autocomplete/autocomplete";
 import { OutputResults } from "./output-results";
+import { useSettings } from "./settings-provider";
 
 export function Demo() {
+  const { showOutput } = useSettings();
+
   const [posts, setPosts] = useState<AutocompleteOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,8 +41,12 @@ export function Demo() {
   };
 
   return (
-    <div className="flex w-full flex-col items-start justify-center gap-6 md:flex-row xl:px-40">
-      <Autocomplete className="w-1/2" isLoading={isLoading}>
+    <div className="flex w-full flex-col items-start justify-center gap-6 md:flex-row">
+      <Autocomplete
+        // className="w-full md:w-1/2"
+        className="w-full md:w-[clamp(320px,50%,600px)]"
+        isLoading={isLoading}
+      >
         <AutocompleteLabel>Search posts</AutocompleteLabel>
         <AutocompleteContent>
           <AutocompleteInput onSearchChange={handleSearchPosts} />
@@ -59,7 +66,7 @@ export function Demo() {
         </AutocompleteContent>
       </Autocomplete>
 
-      <OutputResults data={posts} />
+      {showOutput && <OutputResults data={posts} />}
     </div>
   );
 }

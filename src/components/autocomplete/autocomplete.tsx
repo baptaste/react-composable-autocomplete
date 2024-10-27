@@ -82,7 +82,6 @@ const AutocompleteContent = forwardRef<
       onClick={() => setFocused(true)}
       className={cn(
         "duration-50 w-full rounded-t-md border shadow-none",
-        // open && "rounded-b-none",
         focused && "border-foreground",
         className,
       )}
@@ -239,7 +238,7 @@ const AutocompleteList = forwardRef<
       ref={ref}
       data-state={open ? "open" : "closed"}
       className={cn(
-        "max-h-[168px] overflow-y-auto pt-2",
+        "z-10 max-h-[168px] overflow-y-auto pt-2",
         "absolute left-0 right-0 top-full",
         "rounded-b-md border-x border-b bg-background",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",

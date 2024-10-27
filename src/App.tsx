@@ -1,22 +1,39 @@
+import { GitHubLogoIcon } from "@radix-ui/react-icons";
+
 import { Demo } from "./components/demo";
-import { ThemeProvider } from "./components/theme-provider";
+import { Hero } from "./components/hero";
+import { Settings } from "./components/settings";
+import { SettingsProvider } from "./components/settings-provider";
+import { Button } from "./components/ui/button";
 import { cn } from "./lib/utils/cn";
 
 function App() {
   return (
-    <ThemeProvider>
+    <SettingsProvider>
       <div
         className={cn(
-          "container flex min-h-dvh w-screen flex-col items-center justify-center bg-background py-10 text-foreground dark:bg-black dark:text-background",
+          "container mx-auto flex min-h-dvh w-screen flex-col bg-background px-4 py-16 text-foreground md:items-center md:justify-center",
         )}
       >
-        <h1 className="mb-16 text-5xl font-extrabold text-foreground">
-          Shadcn basic Autocomplete
-        </h1>
-
-        <Demo />
+        <header>
+          <Hero />
+        </header>
+        <aside className="absolute right-6 top-6 flex items-center space-x-2">
+          <Button asChild variant="ghost" className="p-2">
+            <a
+              target="_blank"
+              href="https://github.com/baptaste/shadcn-ui-autocomplete"
+            >
+              <GitHubLogoIcon className="h-5 w-5 text-foreground" />
+            </a>
+          </Button>
+          <Settings />
+        </aside>
+        <main className="block w-full lg:px-40 xl:px-60">
+          <Demo />
+        </main>
       </div>
-    </ThemeProvider>
+    </SettingsProvider>
   );
 }
 
