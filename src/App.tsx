@@ -18,13 +18,14 @@ function App() {
         <header>
           <Hero />
         </header>
-        <aside className="absolute right-6 top-6 flex items-center space-x-2">
+        <aside className="absolute right-4 top-6 flex items-center space-x-2 md:right-6">
           <Button asChild variant="ghost" className="p-2">
             <a
               target="_blank"
               href="https://github.com/baptaste/shadcn-ui-autocomplete"
             >
-              <GitHubLogoIcon className="h-5 w-5 text-foreground" />
+              <GitHubLogoIcon className="mr-2 h-5 w-5 text-foreground" />
+              <span className="hidden md:block">GitHub</span>
             </a>
           </Button>
           <Settings />

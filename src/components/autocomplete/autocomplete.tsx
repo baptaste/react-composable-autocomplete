@@ -1,17 +1,16 @@
 import {
   forwardRef,
-  MouseEvent,
   useCallback,
   useEffect,
   useRef,
   type ComponentPropsWithoutRef,
+  type MouseEvent,
 } from "react";
 // Replace with your own icon library
 import { Cross2Icon } from "@radix-ui/react-icons";
 
 // Replace with your own path
 import { cn } from "@/lib/utils/cn";
-import { filterItems } from "@/lib/utils/filter-items";
 
 import { Button } from "../ui/button";
 import {
@@ -100,6 +99,7 @@ const AutocompleteInput = forwardRef<
 >(
   (
     {
+      children,
       className,
       id,
       name,
@@ -120,7 +120,6 @@ const AutocompleteInput = forwardRef<
       setSelectedValue,
       setItems,
       onOpenChange,
-      clearStates,
     } = useAutocomplete();
 
     const updateIsOpen = useCallback(
@@ -151,9 +150,13 @@ const AutocompleteInput = forwardRef<
         if (!value.length) {
           setItems([]);
           onSearchChange?.(value, []);
-        } else {
-          onSearchChange?.(value, filterItems(value, items));
+          return;
         }
+
+        const results = items?.filter(({ label }) =>
+          label.toLowerCase().includes(value.toLowerCase()),
+        );
+        onSearchChange?.(value, results);
       },
       [
         selectedValue,
@@ -165,12 +168,6 @@ const AutocompleteInput = forwardRef<
         updateIsOpen,
       ],
     );
-
-    const handleClear = (e: MouseEvent) => {
-      e.stopPropagation();
-      clearStates();
-      onSearchChange?.("", []);
-    };
 
     return (
       <div
@@ -188,22 +185,41 @@ const AutocompleteInput = forwardRef<
           onValueChange={handleSearchChange}
           {...props}
         />
-        <Button
-          variant="ghost"
-          onClick={handleClear}
-          className={cn(
-            "pointer-events-none absolute right-0 opacity-0 transition-opacity hover:bg-transparent",
-            (open || searchValue.length > 0 || !!selectedValue) &&
-              "pointer-events-auto opacity-100",
-          )}
-        >
-          <Cross2Icon className="h-4 w-4 opacity-50 transition-opacity hover:opacity-100" />
-          <span className="sr-only">Clear</span>
-        </Button>
+        {children}
       </div>
     );
   },
 );
+
+const AutocompleteClear = forwardRef<
+  HTMLButtonElement,
+  ComponentPropsWithoutRef<typeof Button>
+>(({ className, ...props }, ref) => {
+  const { open, searchValue, selectedValue, clearStates } = useAutocomplete();
+
+  const handleClear = (e: MouseEvent) => {
+    e.stopPropagation();
+    clearStates();
+  };
+
+  return (
+    <Button
+      ref={ref}
+      variant="ghost"
+      onClick={handleClear}
+      className={cn(
+        "pointer-events-none absolute right-0 opacity-0 transition-opacity hover:bg-transparent",
+        (open || searchValue.length > 0 || !!selectedValue) &&
+          "pointer-events-auto opacity-100",
+        className,
+      )}
+      {...props}
+    >
+      <Cross2Icon className="h-4 w-4 opacity-50 transition-opacity hover:opacity-100" />
+      <span className="sr-only">Clear</span>
+    </Button>
+  );
+});
 
 const AutocompleteList = forwardRef<
   HTMLDivElement,
@@ -257,7 +273,7 @@ const AutocompleteList = forwardRef<
 const AutocompleteItem = forwardRef<
   HTMLDivElement,
   ComponentPropsWithoutRef<typeof CommandItem> & {
-    onSelectChange?: (value: string | null) => void;
+    onSelectChange?: (value: string) => void;
   }
 >(({ children, className, value, onSelectChange, ...props }, ref) => {
   const {
@@ -271,8 +287,6 @@ const AutocompleteItem = forwardRef<
   } = useAutocomplete();
 
   const handleSelectChange = (value: string) => {
-    console.log("AutocompleteItem handleSelectChange", { value });
-
     const selectedItem = items.find((item) => item.value === value);
 
     if (!selectedItem) {
@@ -356,6 +370,7 @@ export {
   AutocompleteInput,
   AutocompleteList,
   AutocompleteItem,
+  AutocompleteClear,
   AutocompleteLoading,
   AutocompleteEmpty,
   type AutocompleteOption,

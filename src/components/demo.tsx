@@ -4,6 +4,7 @@ import { fetchPosts } from "@/lib/utils/fetch-posts";
 
 import {
   Autocomplete,
+  AutocompleteClear,
   AutocompleteContent,
   AutocompleteEmpty,
   AutocompleteInput,
@@ -11,7 +12,7 @@ import {
   AutocompleteLabel,
   AutocompleteList,
   AutocompleteLoading,
-  AutocompleteOption,
+  type AutocompleteOption,
 } from "./autocomplete/autocomplete";
 import { OutputResults } from "./output-results";
 import { useSettings } from "./settings-provider";
@@ -33,7 +34,7 @@ export function Demo() {
     setIsLoading(false);
   };
 
-  const handleSelectPost = (value: string | null) => {
+  const handleSelectPost = (value: string) => {
     const post = posts.find(({ label }) => label === value);
     if (post) {
       setPosts([post]);
@@ -42,14 +43,12 @@ export function Demo() {
 
   return (
     <div className="flex w-full flex-col items-start justify-center gap-6 md:flex-row">
-      <Autocomplete
-        // className="w-full md:w-1/2"
-        className="w-full md:w-[clamp(320px,50%,600px)]"
-        isLoading={isLoading}
-      >
+      <Autocomplete className="w-full md:w-1/2" isLoading={isLoading}>
         <AutocompleteLabel>Search posts</AutocompleteLabel>
         <AutocompleteContent>
-          <AutocompleteInput onSearchChange={handleSearchPosts} />
+          <AutocompleteInput onSearchChange={handleSearchPosts}>
+            <AutocompleteClear />
+          </AutocompleteInput>
           <AutocompleteList>
             {posts.map((post) => (
               <AutocompleteItem

@@ -40,7 +40,7 @@ export function Settings() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="p-2">
           <MixerHorizontalIcon className="mr-2 h-5 w-5 text-foreground" />
-          Settings
+          <span className="hidden md:block">Settings</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="mr-6">
