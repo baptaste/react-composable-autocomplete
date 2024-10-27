@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+@fontface {
+  font-family: "Poppins", sans-serif;
+  src: url("https://fonts.googleapis.com/css?family=Poppins");
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -80,6 +85,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+    font-family: "Poppins", sans-serif;
   }
 }

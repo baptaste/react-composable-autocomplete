@@ -3,7 +3,8 @@ import { type DialogProps } from "@radix-ui/react-dialog";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { Command as CommandPrimitive } from "cmdk";
 
-import { cn } from "../core/utils/tailwind-utils";
+import { cn } from "@/lib/utils/cn";
+
 import { Dialog, DialogContent } from "./dialog";
 
 const Command = React.forwardRef<
@@ -74,7 +75,7 @@ const CommandEmpty = React.forwardRef<
 >((props, ref) => (
   <CommandPrimitive.Empty
     ref={ref}
-    className="py-6 text-center text-sm"
+    className={cn("py-6 text-center text-sm", props.className)}
     {...props}
   />
 ));
