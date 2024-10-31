@@ -86,12 +86,8 @@ const AutocompleteProvider = ({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (["Enter", "Escape"].includes(e.key) && open) {
+      if (open && ["Enter", "Escape"].includes(e.key)) {
         setOpen(false);
-      }
-
-      if (["Enter", "Escape"].includes(e.key) && focused) {
-        setFocused(false);
       }
     };
 
@@ -100,23 +96,18 @@ const AutocompleteProvider = ({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open, focused, setOpen, setFocused]);
+  }, [open, setOpen]);
 
   useEffect(() => {
     const handleOuterClick = (e: MouseEvent) => {
       if (
+        open &&
         e.target instanceof HTMLElement &&
         !e.target.closest("[data-autocomplete]") &&
         !e.target.closest("[data-autocomplete-input]") &&
         !e.target.closest("[data-autocomplete-item]")
       ) {
-        if (open) {
-          setOpen(false);
-        }
-
-        if (focused) {
-          setFocused(false);
-        }
+        setOpen(false);
       }
     };
 
@@ -125,7 +116,7 @@ const AutocompleteProvider = ({
     return () => {
       window.removeEventListener("click", handleOuterClick);
     };
-  }, [open, focused, setOpen, setFocused]);
+  }, [open, setOpen]);
 
   const value = useMemo(() => {
     return {
@@ -162,17 +153,6 @@ const AutocompleteProvider = ({
     focused,
     setFocused,
   ]);
-
-  console.log("Context", {
-    open,
-    defaultOpen,
-    searchValue,
-    selectedValue,
-    items,
-    isLoading,
-    isEmpty,
-    focused,
-  });
 
   return (
     <AutocompleteContext.Provider value={value}>

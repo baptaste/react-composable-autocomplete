@@ -72,15 +72,14 @@ const AutocompleteContent = forwardRef<
   HTMLDivElement,
   ComponentPropsWithoutRef<typeof Command>
 >(({ children, className, ...props }, ref) => {
-  const { focused, setFocused } = useAutocomplete();
+  const { focused } = useAutocomplete();
 
   return (
     <Command
       ref={ref}
       shouldFilter={false}
-      onClick={() => setFocused(true)}
       className={cn(
-        "duration-50 w-full rounded-t-md border shadow-none",
+        "duration-50 w-full rounded-md border shadow-none",
         focused && "border-foreground",
         className,
       )}
@@ -94,7 +93,7 @@ const AutocompleteContent = forwardRef<
 const AutocompleteInput = forwardRef<
   HTMLInputElement,
   ComponentPropsWithoutRef<typeof CommandInput> & {
-    onSearchChange?: (search: string, results: AutocompleteOption[]) => void;
+    onSearchChange?: (search: string) => void;
   }
 >(
   (
@@ -103,7 +102,7 @@ const AutocompleteInput = forwardRef<
       className,
       id,
       name,
-      placeholder: placeholderProp = "Type a command or search...",
+      placeholder: placeholderProp = "Search...",
       onSearchChange,
       ...props
     },
@@ -114,6 +113,7 @@ const AutocompleteInput = forwardRef<
       isLoading,
       open,
       setOpen,
+      setFocused,
       searchValue,
       setSearchValue,
       selectedValue,
@@ -149,18 +149,14 @@ const AutocompleteInput = forwardRef<
 
         if (!value.length) {
           setItems([]);
-          onSearchChange?.(value, []);
+          onSearchChange?.("");
           return;
         }
 
-        const results = items?.filter(({ label }) =>
-          label.toLowerCase().includes(value.toLowerCase()),
-        );
-        onSearchChange?.(value, results);
+        onSearchChange?.(value);
       },
       [
         selectedValue,
-        items,
         setItems,
         setSelectedValue,
         onSearchChange,
@@ -168,6 +164,9 @@ const AutocompleteInput = forwardRef<
         updateIsOpen,
       ],
     );
+
+    const labelValue =
+      items.find((item) => item.value === selectedValue)?.label ?? "";
 
     return (
       <div
@@ -180,9 +179,11 @@ const AutocompleteInput = forwardRef<
           id={id ? String(id) : undefined}
           name={name}
           placeholder={isLoading ? "Loading..." : placeholderProp}
-          className={cn("pr-8", className)}
-          value={searchValue.length ? searchValue : (selectedValue ?? "")}
+          className={cn("pr-8 text-foreground", className)}
+          value={searchValue.length > 0 ? searchValue : labelValue}
           onValueChange={handleSearchChange}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           {...props}
         />
         {children}
@@ -193,13 +194,14 @@ const AutocompleteInput = forwardRef<
 
 const AutocompleteClear = forwardRef<
   HTMLButtonElement,
-  ComponentPropsWithoutRef<typeof Button>
->(({ className, ...props }, ref) => {
+  ComponentPropsWithoutRef<typeof Button> & { onClear?: () => void }
+>(({ className, onClear, ...props }, ref) => {
   const { open, searchValue, selectedValue, clearStates } = useAutocomplete();
 
   const handleClear = (e: MouseEvent) => {
     e.stopPropagation();
     clearStates();
+    onClear?.();
   };
 
   return (
@@ -208,14 +210,14 @@ const AutocompleteClear = forwardRef<
       variant="ghost"
       onClick={handleClear}
       className={cn(
-        "pointer-events-none absolute right-0 opacity-0 transition-opacity hover:bg-transparent",
+        "group pointer-events-none absolute right-0 opacity-0 transition-opacity hover:bg-transparent",
         (open || searchValue.length > 0 || !!selectedValue) &&
           "pointer-events-auto opacity-100",
         className,
       )}
       {...props}
     >
-      <Cross2Icon className="h-4 w-4 opacity-50 transition-opacity hover:opacity-100" />
+      <Cross2Icon className="h-4 w-4 opacity-50 transition-opacity group-hover:opacity-100" />
       <span className="sr-only">Clear</span>
     </Button>
   );
@@ -226,37 +228,31 @@ const AutocompleteList = forwardRef<
   ComponentPropsWithoutRef<typeof CommandGroup>
 >(({ children, className, ...props }, ref) => {
   const internalRef = useRef<HTMLDivElement | null>(null);
-  const { open, searchValue, isLoading, setItems } = useAutocomplete();
+  const { open, isLoading, setItems } = useAutocomplete();
 
   useEffect(() => {
-    if (isLoading) {
-      return;
-    }
-
-    if (open && searchValue.length && internalRef.current) {
-      const items = Array.from(
+    if (!isLoading && open && internalRef.current) {
+      const elements = Array.from(
         internalRef.current.querySelectorAll("[data-autocomplete-item]") ?? [],
       );
 
       setItems(
-        items.map((item) => {
-          return {
-            value: (item as HTMLElement).dataset.value ?? "",
-            label: item.textContent ?? "",
-          };
-        }),
+        elements.map((item) => ({
+          value: (item as HTMLElement).dataset.value ?? "",
+          label: (item as HTMLElement).textContent ?? "",
+        })),
       );
     }
-  }, [open, isLoading, searchValue, setItems]);
+  }, [open, isLoading, setItems]);
 
   return (
     <CommandGroup
       ref={ref}
       data-state={open ? "open" : "closed"}
       className={cn(
-        "z-10 max-h-[168px] overflow-y-auto pt-2",
+        "z-10 mt-1.5 max-h-[168px] overflow-y-auto",
         "absolute left-0 right-0 top-full",
-        "rounded-b-md border-x border-b bg-background",
+        "rounded-md border bg-background",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -287,18 +283,18 @@ const AutocompleteItem = forwardRef<
   } = useAutocomplete();
 
   const handleSelectChange = (value: string) => {
-    const selectedItem = items.find((item) => item.value === value);
+    const item = items.find((item) => item.value === value);
 
-    if (!selectedItem) {
+    if (!item) {
       return;
     }
 
     setSelectedValue(value);
-    setItems([selectedItem]);
+    setItems([item]);
     setOpen(false);
     setSearchValue("");
-    onOpenChange?.(false);
     onSelectChange?.(value);
+    onOpenChange?.(false);
   };
 
   if (isLoading) {
@@ -310,8 +306,7 @@ const AutocompleteItem = forwardRef<
       ref={ref}
       key={value}
       data-autocomplete-item=""
-      data-value={value}
-      value={value}
+      value={value?.toString()}
       className={cn("cursor-pointer", className)}
       onSelect={handleSelectChange}
       {...props}

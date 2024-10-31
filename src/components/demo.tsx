@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { fetchPosts } from "@/lib/utils/fetch-posts";
 
@@ -34,12 +34,18 @@ export function Demo() {
     setIsLoading(false);
   };
 
-  const handleSelectPost = (value: string) => {
-    const post = posts.find(({ label }) => label === value);
-    if (post) {
-      setPosts([post]);
-    }
-  };
+  const handleSelectPost = useCallback(
+    (value: string) => {
+      const post = posts.find(
+        (post) => post.value.toString() === value || post.label === value,
+      );
+
+      if (post) {
+        setPosts([post]);
+      }
+    },
+    [posts],
+  );
 
   return (
     <div className="flex w-full flex-col items-start justify-center gap-6 md:flex-row">
@@ -47,7 +53,7 @@ export function Demo() {
         <AutocompleteLabel>Search posts</AutocompleteLabel>
         <AutocompleteContent>
           <AutocompleteInput onSearchChange={handleSearchPosts}>
-            <AutocompleteClear />
+            <AutocompleteClear onClear={() => setPosts([])} />
           </AutocompleteInput>
           <AutocompleteList>
             {posts.map((post) => (
