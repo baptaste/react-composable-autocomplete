@@ -14,7 +14,7 @@ import {
   AutocompleteLoading,
   type AutocompleteOption,
 } from "./autocomplete/autocomplete";
-import { OutputResults } from "./output-results";
+import { OutputBlock } from "./output-block";
 import { useSettings } from "./settings-provider";
 
 export function Demo() {
@@ -71,7 +71,7 @@ export function Demo() {
         </AutocompleteContent>
       </Autocomplete>
 
-      {showOutput && <OutputResults data={posts} />}
+      {showOutput && <OutputBlock data={posts} />}
     </div>
   );
 }
