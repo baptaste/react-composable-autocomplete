@@ -1,7 +1,6 @@
-import { MixerHorizontalIcon } from "@radix-ui/react-icons";
+import { Settings2Icon } from "lucide-react";
 
-import { useSettings, type Theme } from "./settings-provider";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -11,9 +10,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { Label } from "./ui/label";
-import { Switch } from "./ui/switch";
+} from "../ui/dropdown-menu";
+import { Label } from "../ui/label";
+import { Switch } from "../ui/switch";
+import { useSettings, type Theme } from "./settings-provider";
 
 type ThemeOption = { label: string; value: Theme };
 
@@ -32,14 +32,14 @@ const themeOptions: ThemeOption[] = [
   },
 ];
 
-export function Settings() {
+export function SettingsMenu() {
   const { theme, setTheme, showOutput, setShowOutput } = useSettings();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="p-2">
-          <MixerHorizontalIcon className="mr-2 h-5 w-5 text-foreground" />
+          <Settings2Icon className="mr-2 h-5 w-5 text-foreground" />
           <span className="hidden md:block">Settings</span>
         </Button>
       </DropdownMenuTrigger>

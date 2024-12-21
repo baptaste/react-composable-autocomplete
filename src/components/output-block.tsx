@@ -1,15 +1,18 @@
-import { AutocompleteOption } from "./autocomplete/autocomplete";
-import { CodeBlock } from "./code-block";
+import type { AutocompleteOption } from "./autocomplete/autocomplete.context";
+import { CodeExample } from "./code-example";
 import { Label } from "./ui/label";
 
 export function OutputBlock({ data }: { data: AutocompleteOption[] }) {
   return (
-    <div className="block max-h-[231px] w-full overflow-x-hidden rounded-md border border-background md:w-1/2">
-      <Label className="mb-1.5 block w-fit text-foreground">Output</Label>
-      <CodeBlock
-        code={JSON.stringify(data, null, 2)}
+    <div className="flex w-full min-w-max flex-col items-center overflow-y-scroll md:w-[400px]">
+      <Label className="mb-1.5 block w-fit self-start text-foreground">
+        Output
+      </Label>
+      <CodeExample
         lang="json"
-        className="block overflow-auto rounded-md bg-secondary-foreground/90 text-xs text-background"
+        example={JSON.stringify(data, null, 2)}
+        copy={false}
+        className="max-h-[248px] md:min-w-[400px]"
       />
     </div>
   );

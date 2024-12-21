@@ -12,15 +12,15 @@ import {
   AutocompleteLabel,
   AutocompleteList,
   AutocompleteLoading,
-  type AutocompleteOption,
 } from "./autocomplete/autocomplete";
+import type { AutocompleteOption } from "./autocomplete/autocomplete.context";
 import { OutputBlock } from "./output-block";
-import { useSettings } from "./settings-provider";
+import { useSettings } from "./settings/settings-provider";
 
 export function Demo() {
   const { showOutput } = useSettings();
 
-  const [posts, setPosts] = useState<AutocompleteOption[]>([]);
+  const [posts, setPosts] = useState<Array<AutocompleteOption>>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSearchPosts = async (search: string) => {
@@ -47,13 +47,15 @@ export function Demo() {
     [posts],
   );
 
+  const handleClearPosts = () => setPosts([]);
+
   return (
-    <div className="flex w-full flex-col items-start justify-center gap-6 md:flex-row">
-      <Autocomplete className="w-full md:w-1/2" isLoading={isLoading}>
-        <AutocompleteLabel>Search posts</AutocompleteLabel>
+    <div className="flex w-full flex-col items-center gap-6 md:mb-36">
+      <Autocomplete isLoading={isLoading} className="md:max-w-[400px]">
+        <AutocompleteLabel>Search</AutocompleteLabel>
         <AutocompleteContent>
           <AutocompleteInput onSearchChange={handleSearchPosts}>
-            <AutocompleteClear onClear={() => setPosts([])} />
+            <AutocompleteClear onClear={handleClearPosts} />
           </AutocompleteInput>
           <AutocompleteList>
             {posts.map((post) => (
@@ -71,7 +73,7 @@ export function Demo() {
         </AutocompleteContent>
       </Autocomplete>
 
-      {showOutput && <OutputBlock data={posts} />}
+      {/* {showOutput && <OutputBlock data={posts} />} */}
     </div>
   );
 }

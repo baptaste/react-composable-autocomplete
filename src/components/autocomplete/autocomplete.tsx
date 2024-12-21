@@ -1,13 +1,12 @@
 import {
   forwardRef,
-  useCallback,
   useEffect,
   useRef,
   type ComponentPropsWithoutRef,
   type MouseEvent,
 } from "react";
 // Replace with your own icon library
-import { Cross2Icon } from "@radix-ui/react-icons";
+import { XIcon } from "lucide-react";
 
 // Replace with your own path
 import { cn } from "@/lib/utils/cn";
@@ -22,21 +21,16 @@ import {
   CommandList,
 } from "../ui/command";
 import { Label } from "../ui/label";
-import { AutocompleteProvider, useAutocomplete } from "./autocomplete.context";
-
-type AutocompleteOption = {
-  label: string;
-  value: string;
-};
+import {
+  AutocompleteProvider,
+  useAutocomplete,
+  type AutocompleteProviderProps,
+} from "./autocomplete.context";
 
 const Autocomplete = forwardRef<
   HTMLDivElement,
-  ComponentPropsWithoutRef<"div"> & {
+  AutocompleteProviderProps & {
     className?: string;
-    defaultOpen?: boolean;
-    isLoading?: boolean;
-    open?: boolean;
-    onOpenChange?: (open: boolean) => void;
   }
 >(({ children, className, ...props }, ref) => {
   return (
@@ -72,17 +66,11 @@ const AutocompleteContent = forwardRef<
   HTMLDivElement,
   ComponentPropsWithoutRef<typeof Command>
 >(({ children, className, ...props }, ref) => {
-  const { focused } = useAutocomplete();
-
   return (
     <Command
       ref={ref}
       shouldFilter={false}
-      className={cn(
-        "duration-50 w-full rounded-md border shadow-none",
-        focused && "border-foreground",
-        className,
-      )}
+      className={cn("duration-50 w-full shadow-none", className)}
       {...props}
     >
       {children}
@@ -101,89 +89,37 @@ const AutocompleteInput = forwardRef<
       children,
       className,
       id,
-      name,
       placeholder: placeholderProp = "Search...",
       onSearchChange,
       ...props
     },
     ref,
   ) => {
-    const {
-      items,
-      isLoading,
-      open,
-      setOpen,
-      setFocused,
-      searchValue,
-      setSearchValue,
-      selectedValue,
-      setSelectedValue,
-      setItems,
-      onOpenChange,
-    } = useAutocomplete();
+    const { results, isLoading, searchValue, selectedValue, handleSearch } =
+      useAutocomplete();
 
-    const updateIsOpen = useCallback(
-      (value: string) => {
-        let isOpen = open;
+    const handleSearchChange = (search: string) => {
+      handleSearch(search);
+      onSearchChange?.(search);
+    };
 
-        if (!open && value.length) {
-          isOpen = true;
-        } else if (open && !value.length) {
-          isOpen = false;
-        }
-
-        setOpen(isOpen);
-        onOpenChange?.(isOpen);
-      },
-      [open, setOpen, onOpenChange],
-    );
-
-    const handleSearchChange = useCallback(
-      (value: string) => {
-        setSearchValue(value);
-        updateIsOpen(value);
-
-        if (selectedValue) {
-          setSelectedValue(null);
-        }
-
-        if (!value.length) {
-          setItems([]);
-          onSearchChange?.("");
-          return;
-        }
-
-        onSearchChange?.(value);
-      },
-      [
-        selectedValue,
-        setItems,
-        setSelectedValue,
-        onSearchChange,
-        setSearchValue,
-        updateIsOpen,
-      ],
-    );
-
-    const labelValue =
-      items.find((item) => item.value === selectedValue)?.label ?? "";
+    const inputValue =
+      results.find((item) => item.value === selectedValue)?.label ?? "";
 
     return (
       <div
         className={cn(
-          "relative flex items-center [&_*:is(div)]:w-full [&_*:is(div)]:border-b-0",
+          "relative flex items-center rounded-md border border-input transition-colors focus-within:border-foreground focus-within:outline-none [&_*:is(div)]:w-full [&_*:is(div)]:border-b-0",
+          className,
         )}
       >
         <CommandInput
           ref={ref}
           id={id ? String(id) : undefined}
-          name={name}
           placeholder={isLoading ? "Loading..." : placeholderProp}
-          className={cn("pr-8 text-foreground", className)}
-          value={searchValue.length > 0 ? searchValue : labelValue}
+          className="pr-8 text-foreground"
+          value={searchValue.length > 0 ? searchValue : inputValue}
           onValueChange={handleSearchChange}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
           {...props}
         />
         {children}
@@ -196,7 +132,7 @@ const AutocompleteClear = forwardRef<
   HTMLButtonElement,
   ComponentPropsWithoutRef<typeof Button> & { onClear?: () => void }
 >(({ className, onClear, ...props }, ref) => {
-  const { open, searchValue, selectedValue, clearStates } = useAutocomplete();
+  const { isOpen, searchValue, selectedValue, clearStates } = useAutocomplete();
 
   const handleClear = (e: MouseEvent) => {
     e.stopPropagation();
@@ -211,13 +147,13 @@ const AutocompleteClear = forwardRef<
       onClick={handleClear}
       className={cn(
         "group pointer-events-none absolute right-0 opacity-0 transition-opacity hover:bg-transparent",
-        (open || searchValue.length > 0 || !!selectedValue) &&
+        (isOpen || searchValue.length > 0 || !!selectedValue) &&
           "pointer-events-auto opacity-100",
         className,
       )}
       {...props}
     >
-      <Cross2Icon className="h-4 w-4 opacity-50 transition-opacity group-hover:opacity-100" />
+      <XIcon className="h-4 w-4 opacity-50 transition-opacity group-hover:opacity-100" />
       <span className="sr-only">Clear</span>
     </Button>
   );
@@ -227,28 +163,27 @@ const AutocompleteList = forwardRef<
   HTMLDivElement,
   ComponentPropsWithoutRef<typeof CommandGroup>
 >(({ children, className, ...props }, ref) => {
-  const internalRef = useRef<HTMLDivElement | null>(null);
-  const { open, isLoading, setItems } = useAutocomplete();
+  const { isOpen, isLoading, setResults } = useAutocomplete();
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!isLoading && open && internalRef.current) {
-      const elements = Array.from(
-        internalRef.current.querySelectorAll("[data-autocomplete-item]") ?? [],
-      );
+    if (!isLoading && isOpen) {
+      const nodeItems =
+        listRef?.current?.querySelectorAll("[data-autocomplete-item]") ?? [];
 
-      setItems(
-        elements.map((item) => ({
+      setResults?.(
+        Array.from(nodeItems).map((item) => ({
           value: (item as HTMLElement).dataset.value ?? "",
           label: (item as HTMLElement).textContent ?? "",
         })),
       );
     }
-  }, [open, isLoading, setItems]);
+  }, [children, isOpen, isLoading, setResults]);
 
   return (
     <CommandGroup
       ref={ref}
-      data-state={open ? "open" : "closed"}
+      data-state={isOpen ? "open" : "closed"}
       className={cn(
         "z-10 mt-1.5 max-h-[168px] overflow-y-auto",
         "absolute left-0 right-0 top-full",
@@ -256,12 +191,12 @@ const AutocompleteList = forwardRef<
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-        !isLoading && !open && "hidden",
+        !isLoading && !isOpen && "hidden",
         className,
       )}
       {...props}
     >
-      <CommandList ref={internalRef}>{children}</CommandList>
+      <CommandList ref={listRef}>{children}</CommandList>
     </CommandGroup>
   );
 });
@@ -272,29 +207,11 @@ const AutocompleteItem = forwardRef<
     onSelectChange?: (value: string) => void;
   }
 >(({ children, className, value, onSelectChange, ...props }, ref) => {
-  const {
-    isLoading,
-    items,
-    setOpen,
-    setSelectedValue,
-    setSearchValue,
-    setItems,
-    onOpenChange,
-  } = useAutocomplete();
+  const { isLoading, handleSelect } = useAutocomplete();
 
   const handleSelectChange = (value: string) => {
-    const item = items.find((item) => item.value === value);
-
-    if (!item) {
-      return;
-    }
-
-    setSelectedValue(value);
-    setItems([item]);
-    setOpen(false);
-    setSearchValue("");
+    handleSelect(value);
     onSelectChange?.(value);
-    onOpenChange?.(false);
   };
 
   if (isLoading) {
@@ -320,9 +237,9 @@ const AutocompleteLoading = forwardRef<
   HTMLUListElement,
   { className?: string; placeholders?: number }
 >(({ className, placeholders = 3, ...props }, ref) => {
-  const { open, isLoading } = useAutocomplete();
+  const { isLoading, isEmpty } = useAutocomplete();
 
-  if (!isLoading || !open) {
+  if (!isLoading || isEmpty) {
     return null;
   }
 
@@ -368,5 +285,4 @@ export {
   AutocompleteClear,
   AutocompleteLoading,
   AutocompleteEmpty,
-  type AutocompleteOption,
 };
