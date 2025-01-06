@@ -1,6 +1,5 @@
 import tailwindAnimate from "tailwindcss-animate";
 import { fontFamily } from "tailwindcss/defaultTheme";
-import tailwindCssPlugin from "tailwindcss/plugin";
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -77,10 +76,5 @@ export default {
       },
     },
   },
-  plugins: [
-    tailwindAnimate,
-    tailwindCssPlugin(({ addVariant }) => {
-      addVariant("search-cancel", "&::-webkit-search-cancel-button");
-    }),
-  ],
+  plugins: [tailwindAnimate],
 };
