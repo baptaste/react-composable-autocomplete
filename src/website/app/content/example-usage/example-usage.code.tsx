@@ -3,8 +3,8 @@ import { CodeBlock } from "../../components/code-block";
 
 export function ExampleUsageCode() {
   return (
-    <div className="flex flex-col gap-y-4">
-      <h1 className="text-xl">Usage</h1>
+    <div className="flex flex-col gap-y-4 md:w-1/2">
+      <h4 className="text-xl">Usage</h4>
       <CodeBlock lang="tsx" code={exampleUsageCode} />
     </div>
   );
@@ -12,19 +12,18 @@ export function ExampleUsageCode() {
 
 const exampleUsageCode =
 html`  <Autocomplete isLoading={isLoading}>
-    <AutocompleteLabel>Search</AutocompleteLabel>
     <AutocompleteContent>
-      <AutocompleteInput onSearchChange={handleSearchPosts}>
-        <AutocompleteClear onClear={handleClearPosts} />
+      <AutocompleteInput onSearchChange={handleSearch}>
+        <AutocompleteClear onClear={handleClear} />
       </AutocompleteInput>
       <AutocompleteList>
-        {posts.map((post) => (
+        {data.map((item) => (
           <AutocompleteItem
-            key={post.value}
-            value={post.value}
-            onSelectChange={handleSelectPost}
+            key={item.value}
+            value={item.value}
+            onSelectChange={handleSelect}
           >
-            {post.label}
+            {item.label}
           </AutocompleteItem>
         ))}
         <AutocompleteLoading />

@@ -71,7 +71,7 @@ export function SettingsMenu() {
                 e.stopPropagation();
               }}
             />
-            <Label htmlFor="output">Show output</Label>
+            <Label htmlFor="output">Output</Label>
           </div>
         </DropdownMenuItem>
       </DropdownMenuContent>

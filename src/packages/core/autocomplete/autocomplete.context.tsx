@@ -9,7 +9,7 @@ import {
   type PropsWithChildren,
 } from "react";
 
-type AutocompleteOption = {
+type AutocompleteItemShape = {
   label: string;
   value: string;
 };
@@ -18,7 +18,7 @@ type AutocompleteContextValue = {
   isOpen: boolean;
   isLoading: boolean;
   isEmpty: boolean;
-  results: Array<AutocompleteOption>;
+  results: Array<AutocompleteItemShape>;
   searchValue: string;
   selectedValue: string | null;
 
@@ -27,7 +27,7 @@ type AutocompleteContextValue = {
   clearStates: () => void;
 
   setIsOpen?: (open: boolean) => void;
-  setResults?: (results: Array<AutocompleteOption>) => void;
+  setResults?: (results: Array<AutocompleteItemShape>) => void;
 };
 
 const AutocompleteContext = createContext<AutocompleteContextValue | null>(
@@ -144,6 +144,24 @@ function useHandleKeyDown(
   }, [isOpen, setIsOpen]);
 }
 
+function useIsEmpty(
+  params: Pick<
+    AutocompleteContextValue,
+    "isLoading" | "results" | "searchValue"
+  >,
+): boolean {
+  const { isLoading, results, searchValue } = params;
+
+  const isEmpty = useMemo<boolean>(() => {
+    if (isLoading) {
+      return false;
+    }
+    return searchValue.length > 0 && results.length === 0;
+  }, [isLoading, searchValue, results]);
+
+  return isEmpty;
+}
+
 type AutocompleteProviderProps = PropsWithChildren<{
   defaultOpen?: boolean;
   open?: boolean;
@@ -162,9 +180,8 @@ function AutocompleteProvider({
   onSearchChange,
   onSelectChange,
 }: AutocompleteProviderProps) {
+  const [results, setResults] = useState<Array<AutocompleteItemShape>>([]);
   const [isOpen, setIsOpen] = useIsOpen({ open, defaultOpen, onOpenChange });
-  const [results, setResults] = useState<Array<AutocompleteOption>>([]);
-
   const [searchValue, setSearchValue, handleSearch] = useSearchValue({
     isOpen,
     setIsOpen,
@@ -177,7 +194,6 @@ function AutocompleteProvider({
       onSearchChange?.(value);
     },
   });
-
   const [selectedValue, setSelectedValue, handleSelect] = useSelectedValue({
     results,
     setResults,
@@ -187,13 +203,9 @@ function AutocompleteProvider({
       onSelectChange?.(value);
     },
   });
+  const isEmpty = useIsEmpty({ isLoading, results, searchValue });
 
   useHandleKeyDown({ isOpen, setIsOpen });
-
-  const isEmpty = useMemo(
-    () => !isLoading && isOpen && searchValue.length > 0 && !results.length,
-    [isLoading, isOpen, searchValue, results],
-  );
 
   const context = useMemo<AutocompleteContextValue>(() => {
     return {
@@ -229,6 +241,8 @@ function AutocompleteProvider({
     setResults,
   ]);
 
+  console.log({ context });
+
   return (
     <AutocompleteContext.Provider value={context}>
       {children}
@@ -237,7 +251,7 @@ function AutocompleteProvider({
 }
 
 export {
-  type AutocompleteOption,
+  type AutocompleteItemShape,
   type AutocompleteContextValue,
   type AutocompleteProviderProps,
   AutocompleteProvider,

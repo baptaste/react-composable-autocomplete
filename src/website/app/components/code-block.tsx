@@ -1,22 +1,21 @@
-import { useCallback, useEffect, useState } from "react";
-import { createHighlighter } from "shiki";
+import { useEffect, useState } from "react";
 
 import { cn } from "@/packages/core/utils/cn";
 
+import {
+  getHighlightedHtmlCodeString,
+  type CodeHighlightLang,
+} from "../lib/code";
 import { ClipboardCopy } from "./clipboard-copy/clipboard-copy";
-
-type Lang = "tsx" | "js" | "json" | "bash" | "html";
 
 type CodeBlockProps = {
   code: string;
-  lang: Lang;
+  lang: CodeHighlightLang;
   copy?: boolean;
   className?: string;
   lineNumbers?: boolean;
   singleLine?: boolean;
 };
-
-const THEME = "github-dark-default";
 
 export function CodeBlock({
   code,
@@ -28,21 +27,9 @@ export function CodeBlock({
 }: CodeBlockProps) {
   const [html, setHtml] = useState<string>("");
 
-  const getHighlightedHtmlCodeString = useCallback(async () => {
-    const highlighter = await createHighlighter({
-      themes: [THEME],
-      langs: [lang],
-    });
-
-    return highlighter.codeToHtml(code, {
-      lang,
-      theme: THEME,
-    });
-  }, [code, lang]);
-
   useEffect(() => {
-    getHighlightedHtmlCodeString().then(setHtml);
-  }, [getHighlightedHtmlCodeString]);
+    getHighlightedHtmlCodeString(code, lang).then(setHtml);
+  }, [code, lang]);
 
   return (
     <div className={cn("relative inline-flex", !singleLine && "w-full")}>
@@ -50,7 +37,7 @@ export function CodeBlock({
         <ClipboardCopy
           value={code}
           className={cn(
-            "absolute right-4 top-2 z-10",
+            "absolute right-2 top-2 z-10 md:right-4",
             singleLine && "top-1/2 -translate-y-1/2",
           )}
         />
@@ -58,8 +45,8 @@ export function CodeBlock({
       <div
         dangerouslySetInnerHTML={{ __html: html }}
         className={cn(
-          "max-h-[600px] w-full overflow-y-scroll rounded-md bg-secondary",
-          "[&>.shiki>pre]:!min-w-0 [&>.shiki]:!w-full [&>.shiki]:!overflow-x-auto [&>.shiki]:!rounded-md [&>.shiki]:!p-3 [&>.shiki]:!text-sm [&>.shiki]:!leading-4",
+          "h-full max-h-[600px] w-full overflow-y-scroll rounded-md bg-secondary",
+          "[&>.shiki>pre]:!min-w-0 [&>.shiki]:!h-full [&>.shiki]:!w-full [&>.shiki]:!overflow-x-auto [&>.shiki]:!rounded-md [&>.shiki]:!p-3 [&>.shiki]:!text-sm [&>.shiki]:!leading-4",
 
           lineNumbers && "[&>.shiki>code]:[counter-reset:line-number]",
           lineNumbers &&

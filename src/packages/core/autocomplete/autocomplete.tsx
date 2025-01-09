@@ -154,6 +154,10 @@ const AutocompleteClear = forwardRef<
     onClear?.();
   };
 
+  if (!selectedValue && searchValue.length === 0) {
+    return null;
+  }
+
   return (
     <Button
       ref={ref}
@@ -177,8 +181,11 @@ const AutocompleteList = forwardRef<
   HTMLDivElement,
   ComponentPropsWithoutRef<typeof CommandGroup>
 >(({ children, className, ...props }, ref) => {
-  const { isOpen, isLoading, setResults } = useAutocomplete();
   const listRef = useRef<HTMLDivElement>(null);
+  const { isOpen, isLoading, isEmpty, results, setResults } = useAutocomplete();
+
+  const state =
+    isOpen && (results.length > 0 || isLoading || isEmpty) ? "open" : "closed";
 
   useEffect(() => {
     if (!isLoading && isOpen) {
@@ -197,15 +204,16 @@ const AutocompleteList = forwardRef<
   return (
     <CommandGroup
       ref={ref}
-      data-state={isOpen ? "open" : "closed"}
+      data-state={state}
       className={cn(
+        "AutocompleteList",
         "z-10 mt-1.5 max-h-[168px] overflow-y-auto",
         "absolute left-0 right-0 top-full",
         "rounded-md border bg-background",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-        !isLoading && !isOpen && "hidden",
+        "data-[state=closed]:hidden",
         className,
       )}
       {...props}

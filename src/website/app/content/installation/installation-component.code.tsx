@@ -23,15 +23,16 @@ export function InstallationComponentCode() {
 }
 
 const componentInstallationCode =
-html`  import {
-    forwardRef,
-    useEffect,
-    useRef,
-    type ComponentPropsWithoutRef,
-    type MouseEvent,
-  } from "react";
+html`   import {
+     forwardRef,
+     useEffect,
+     useRef,
+     type ComponentPropsWithoutRef,
+     type MouseEvent,
+   } from "react";
    // Replace with your own icon library
    import { XIcon } from "lucide-react";
+  import { useOnClickOutside } from "usehooks-ts";
 
   // Replace with your own path
   import { cn } from "@/packages/core/utils/cn";
@@ -127,7 +128,7 @@ html`  import {
         children,
         className,
         id,
-        placeholder: placeholderProp = "Search...",
+        placeholder: placeholderProp = "Type to search...",
         onSearchChange,
         ...props
       },
@@ -178,6 +179,10 @@ html`  import {
       onClear?.();
     };
 
+    if (!selectedValue && searchValue.length === 0) {
+      return null;
+    }
+
     return (
       <Button
         ref={ref}
@@ -191,7 +196,7 @@ html`  import {
         )}
         {...props}
       >
-        <Cross2Icon className="h-4 w-4 opacity-50 transition-opacity group-hover:opacity-100" />
+        <XIcon className="h-4 w-4 opacity-50 transition-opacity group-hover:opacity-100" />
         <span className="sr-only">Clear</span>
       </Button>
     );
@@ -201,8 +206,11 @@ html`  import {
     HTMLDivElement,
     ComponentPropsWithoutRef<typeof CommandGroup>
   >(({ children, className, ...props }, ref) => {
-    const { isOpen, isLoading, setResults } = useAutocomplete();
     const listRef = useRef<HTMLDivElement>(null);
+    const { isOpen, isLoading, isEmpty, results, setResults } = useAutocomplete();
+
+    const state =
+      isOpen && (results.length > 0 || isLoading || isEmpty) ? "open" : "closed";
 
     useEffect(() => {
       if (!isLoading && isOpen) {
@@ -216,25 +224,28 @@ html`  import {
           })),
         );
       }
-    }, [isOpen, isLoading, setResults]);
+    }, [children, isOpen, isLoading, setResults]);
 
     return (
       <CommandGroup
         ref={ref}
-        data-state={isOpen ? "open" : "closed"}
+        data-state={state}
         className={cn(
+          "AutocompleteList",
           "z-10 mt-1.5 max-h-[168px] overflow-y-auto",
           "absolute left-0 right-0 top-full",
           "rounded-md border bg-background",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-          !isLoading && !isOpen && "hidden",
+          "data-[state=closed]:hidden",
           className,
         )}
         {...props}
       >
-        <CommandList ref={listRef} className="overflow-y-hidden">{children}</CommandList>
+        <CommandList ref={listRef} className="overflow-y-hidden">
+          {children}
+        </CommandList>
       </CommandGroup>
     );
   });

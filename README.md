@@ -6,19 +6,18 @@ A basic React/tailwind autocomplete component built with [shadcn/ui](https://ui.
 
 ```tsx
 <Autocomplete isLoading={isLoading}>
-  <AutocompleteLabel>Search</AutocompleteLabel>
   <AutocompleteContent>
-    <AutocompleteInput onSearchChange={handleSearchPosts}>
-      <AutocompleteClear onClear={handleClearPosts} />
+    <AutocompleteInput onSearchChange={handleSearch}>
+      <AutocompleteClear onClear={handleClear} />
     </AutocompleteInput>
     <AutocompleteList>
-      {posts.map((post) => (
+      {data.map((item) => (
         <AutocompleteItem
-          key={post.value}
-          value={post.value}
-          onSelectChange={handleSelectPost}
+          key={item.value}
+          value={item.value}
+          onSelectChange={handleSelect}
         >
-          {post.label}
+          {item.label}
         </AutocompleteItem>
       ))}
       <AutocompleteLoading />
@@ -60,7 +59,7 @@ export default {
 
 The Autocomplete component is built on top of the shadcn's version `<Command />` component.
 
-If it's not already in your project, you can follow the cmdk's [installation guide](https://ui.shadcn.com/docs/components/command).<br />
+If it's not already in your project, you can follow the [installation guide](https://ui.shadcn.com/docs/components/command).<br />
 Then, replace `<CommandItem />` className with the following:
 
 ```html
@@ -83,13 +82,14 @@ import {
   createContext,
   useCallback,
   useContext,
+  useDeferredValue,
   useEffect,
   useMemo,
   useState,
   type PropsWithChildren,
 } from "react";
 
-type AutocompleteOption = {
+type AutocompleteItemShape = {
   label: string;
   value: string;
 };
@@ -98,7 +98,7 @@ type AutocompleteContextValue = {
   isOpen: boolean;
   isLoading: boolean;
   isEmpty: boolean;
-  results: Array<AutocompleteOption>;
+  results: Array<AutocompleteItemShape>;
   searchValue: string;
   selectedValue: string | null;
 
@@ -107,7 +107,7 @@ type AutocompleteContextValue = {
   clearStates: () => void;
 
   setIsOpen?: (open: boolean) => void;
-  setResults?: (results: Array<AutocompleteOption>) => void;
+  setResults?: (results: Array<AutocompleteItemShape>) => void;
 };
 
 const AutocompleteContext = createContext<AutocompleteContextValue | null>(
@@ -224,6 +224,24 @@ function useHandleKeyDown(
   }, [isOpen, setIsOpen]);
 }
 
+function useIsEmpty(
+  params: Pick<
+    AutocompleteContextValue,
+    "isLoading" | "results" | "searchValue"
+  >,
+): boolean {
+  const { isLoading, results, searchValue } = params;
+
+  const isEmpty = useMemo<boolean>(() => {
+    if (isLoading) {
+      return false;
+    }
+    return searchValue.length > 0 && results.length === 0;
+  }, [isLoading, searchValue, results]);
+
+  return isEmpty;
+}
+
 type AutocompleteProviderProps = PropsWithChildren<{
   defaultOpen?: boolean;
   open?: boolean;
@@ -242,9 +260,8 @@ function AutocompleteProvider({
   onSearchChange,
   onSelectChange,
 }: AutocompleteProviderProps) {
+  const [results, setResults] = useState<Array<AutocompleteItemShape>>([]);
   const [isOpen, setIsOpen] = useIsOpen({ open, defaultOpen, onOpenChange });
-  const [results, setResults] = useState<Array<AutocompleteOption>>([]);
-
   const [searchValue, setSearchValue, handleSearch] = useSearchValue({
     isOpen,
     setIsOpen,
@@ -257,7 +274,6 @@ function AutocompleteProvider({
       onSearchChange?.(value);
     },
   });
-
   const [selectedValue, setSelectedValue, handleSelect] = useSelectedValue({
     results,
     setResults,
@@ -267,13 +283,9 @@ function AutocompleteProvider({
       onSelectChange?.(value);
     },
   });
+  const isEmpty = useIsEmpty({ isLoading, results, searchValue });
 
   useHandleKeyDown({ isOpen, setIsOpen });
-
-  const isEmpty = useMemo(
-    () => !isLoading && isOpen && searchValue.length > 0 && !results.length,
-    [isLoading, isOpen, searchValue, results],
-  );
 
   const context = useMemo<AutocompleteContextValue>(() => {
     return {
@@ -286,6 +298,7 @@ function AutocompleteProvider({
       handleSearch,
       handleSelect,
       setResults,
+      setIsOpen,
       clearStates: () => {
         setIsOpen(false);
         setSelectedValue(null);
@@ -316,7 +329,7 @@ function AutocompleteProvider({
 }
 
 export {
-  type AutocompleteOption,
+  type AutocompleteItemShape,
   type AutocompleteContextValue,
   type AutocompleteProviderProps,
   AutocompleteProvider,
@@ -338,6 +351,7 @@ import {
 } from "react";
 // Replace with your own icon library
 import { XIcon } from "lucide-react";
+import { useOnClickOutside } from "usehooks-ts";
 
 // Replace with your own path
 import { cn } from "@/packages/core/utils/cn";
@@ -433,7 +447,7 @@ const AutocompleteInput = forwardRef<
       children,
       className,
       id,
-      placeholder: placeholderProp = "Search...",
+      placeholder: placeholderProp = "Type to search...",
       onSearchChange,
       ...props
     },
@@ -484,6 +498,10 @@ const AutocompleteClear = forwardRef<
     onClear?.();
   };
 
+  if (!selectedValue && searchValue.length === 0) {
+    return null;
+  }
+
   return (
     <Button
       ref={ref}
@@ -497,7 +515,7 @@ const AutocompleteClear = forwardRef<
       )}
       {...props}
     >
-      <Cross2Icon className="h-4 w-4 opacity-50 transition-opacity group-hover:opacity-100" />
+      <XIcon className="h-4 w-4 opacity-50 transition-opacity group-hover:opacity-100" />
       <span className="sr-only">Clear</span>
     </Button>
   );
@@ -507,8 +525,11 @@ const AutocompleteList = forwardRef<
   HTMLDivElement,
   ComponentPropsWithoutRef<typeof CommandGroup>
 >(({ children, className, ...props }, ref) => {
-  const { isOpen, isLoading, setResults } = useAutocomplete();
   const listRef = useRef<HTMLDivElement>(null);
+  const { isOpen, isLoading, isEmpty, results, setResults } = useAutocomplete();
+
+  const state =
+    isOpen && (results.length > 0 || isLoading || isEmpty) ? "open" : "closed";
 
   useEffect(() => {
     if (!isLoading && isOpen) {
@@ -522,25 +543,28 @@ const AutocompleteList = forwardRef<
         })),
       );
     }
-  }, [isOpen, isLoading, setResults]);
+  }, [children, isOpen, isLoading, setResults]);
 
   return (
     <CommandGroup
       ref={ref}
-      data-state={isOpen ? "open" : "closed"}
+      data-state={state}
       className={cn(
+        "AutocompleteList",
         "z-10 mt-1.5 max-h-[168px] overflow-y-auto",
         "absolute left-0 right-0 top-full",
         "rounded-md border bg-background",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-        !isLoading && !isOpen && "hidden",
+        "data-[state=closed]:hidden",
         className,
       )}
       {...props}
     >
-      <CommandList ref={listRef} className="overflow-y-hidden">{children}</CommandList>
+      <CommandList ref={listRef} className="overflow-y-hidden">
+        {children}
+      </CommandList>
     </CommandGroup>
   );
 });

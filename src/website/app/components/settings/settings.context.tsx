@@ -34,7 +34,7 @@ const useSettings = () => {
 const SettingsProvider = ({
   children,
   defaultTheme = "system",
-  defaultShowOutput = false,
+  defaultShowOutput = true,
   storageKey = "shadcn-autocomplete-settings",
   ...props
 }: {
@@ -52,15 +52,13 @@ const SettingsProvider = ({
   const getInitialShowOutput = () => {
     const savedShowOutput = localStorage.getItem(`${storageKey}${OUTPUT_KEY}`);
 
-    if (savedShowOutput === null) {
-      return false;
-    }
     if (savedShowOutput === "false") {
       return false;
     }
     if (savedShowOutput === "true") {
       return true;
     }
+
     return defaultShowOutput;
   };
 

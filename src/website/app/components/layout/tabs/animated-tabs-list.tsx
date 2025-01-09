@@ -27,7 +27,7 @@ export function AnimatedTabsList({
       ref={triggerRef}
       data-expanded={expanded}
       className={cn(
-        "group h-10 w-10",
+        "group z-20 h-10 w-10",
         "fixed bottom-16 left-1/2 right-1/2 -translate-x-1/2",
         "flex items-center justify-center",
         "rounded-md border bg-background",

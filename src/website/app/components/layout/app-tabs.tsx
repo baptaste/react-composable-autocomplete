@@ -1,8 +1,9 @@
 import { Tabs, TabsContent } from "@/packages/core/ui/tabs";
-import { Demo } from "@/website/app/content/demo/demo";
 
-import { Installation } from "../../../content/installation/installation";
-import { AnimatedTabsList } from "./animated-tabs-list";
+import { ExampleUsageCode } from "../../content/example-usage/example-usage.code";
+import { Installation } from "../../content/installation/installation";
+import { Playground } from "../../content/playground/playground";
+import { AnimatedTabsList } from "./tabs/animated-tabs-list";
 
 export function AppTabs() {
   return (
@@ -14,7 +15,8 @@ export function AppTabs() {
         value="demo"
         className="block w-full data-[state=active]:mb-20"
       >
-        <Demo />
+        <Playground />
+        <ExampleUsageCode />
       </TabsContent>
       <TabsContent
         value="install"

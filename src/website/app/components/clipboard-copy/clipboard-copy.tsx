@@ -20,8 +20,10 @@ export function ClipboardCopy({ value, className }: ClipboardCopyProps) {
     <Button
       variant="ghost"
       onClick={() => copy(value)}
-      className={cn("group h-fit p-2", className)}
-      disabled={copied}
+      className={cn(
+        "group h-fit bg-foreground/70 p-2 dark:bg-background/70",
+        className,
+      )}
     >
       <Icon className="h-4 w-4 text-background transition-colors group-hover:text-foreground dark:text-foreground" />
     </Button>

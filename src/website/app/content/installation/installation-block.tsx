@@ -7,9 +7,7 @@ const InstallationBlock = ({ children }: { children?: ReactNode }) => {
 };
 
 const InstallationBlockTitle = ({ children }: { children?: ReactNode }) => {
-  return (
-    <h2 className="mb-6 border-b pb-2 text-2xl font-semibold">{children}</h2>
-  );
+  return <h4 className="mb-6 border-b pb-2 text-xl">{children}</h4>;
 };
 
 const InstallationBlockContent = ({

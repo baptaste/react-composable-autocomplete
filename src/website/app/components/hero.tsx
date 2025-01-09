@@ -4,8 +4,8 @@ export function Hero() {
       <h1 className="mb-2 text-pretty text-4xl font-semibold text-foreground lg:text-5xl">
         Shadcn Autocomplete
       </h1>
-      <p className="text-pretty text-secondary-foreground/40 sm:w-2/3 sm:text-center">
-        A basic React autocomplete component inspired by{" "}
+      <p className="text-balance text-secondary-foreground/40 sm:w-2/3 sm:text-center">
+        A basic React Autocomplete component built with{" "}
         <a
           target="_blank"
           href="https://ui.shadcn.com/"

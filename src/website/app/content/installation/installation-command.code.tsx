@@ -24,7 +24,7 @@ export function InstallationCommandCode() {
         />
         {" "}component.
         <br />
-        If it's not already in your project, you can follow the cmdk's{" "}
+        If it's not already in your project, you can follow the{" "}
         <a
           target="_blank"
           href="https://ui.shadcn.com/docs/components/command"

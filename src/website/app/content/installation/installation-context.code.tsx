@@ -28,13 +28,14 @@ html`  import {
     createContext,
     useCallback,
     useContext,
+    useDeferredValue,
     useEffect,
     useMemo,
     useState,
     type PropsWithChildren,
   } from "react";
 
-  type AutocompleteOption = {
+  type AutocompleteItemShape = {
     label: string;
     value: string;
   };
@@ -43,7 +44,7 @@ html`  import {
     isOpen: boolean;
     isLoading: boolean;
     isEmpty: boolean;
-    results: Array<AutocompleteOption>;
+    results: Array<AutocompleteItemShape>;
     searchValue: string;
     selectedValue: string | null;
 
@@ -52,7 +53,7 @@ html`  import {
     clearStates: () => void;
 
     setIsOpen?: (open: boolean) => void;
-    setResults?: (results: Array<AutocompleteOption>) => void;
+    setResults?: (results: Array<AutocompleteItemShape>) => void;
   };
 
   const AutocompleteContext = createContext<AutocompleteContextValue | null>(
@@ -169,6 +170,24 @@ html`  import {
     }, [isOpen, setIsOpen]);
   }
 
+  function useIsEmpty(
+    params: Pick<
+      AutocompleteContextValue,
+      "isLoading" | "results" | "searchValue"
+    >,
+  ): boolean {
+    const { isLoading, results, searchValue } = params;
+
+    const isEmpty = useMemo<boolean>(() => {
+      if (isLoading) {
+        return false;
+      }
+      return searchValue.length > 0 && results.length === 0;
+    }, [isLoading, searchValue, results]);
+
+    return isEmpty;
+  }
+
   type AutocompleteProviderProps = PropsWithChildren<{
     defaultOpen?: boolean;
     open?: boolean;
@@ -187,9 +206,8 @@ html`  import {
     onSearchChange,
     onSelectChange,
   }: AutocompleteProviderProps) {
+    const [results, setResults] = useState<Array<AutocompleteItemShape>>([]);
     const [isOpen, setIsOpen] = useIsOpen({ open, defaultOpen, onOpenChange });
-    const [results, setResults] = useState<Array<AutocompleteOption>>([]);
-
     const [searchValue, setSearchValue, handleSearch] = useSearchValue({
       isOpen,
       setIsOpen,
@@ -202,7 +220,6 @@ html`  import {
         onSearchChange?.(value);
       },
     });
-
     const [selectedValue, setSelectedValue, handleSelect] = useSelectedValue({
       results,
       setResults,
@@ -212,13 +229,9 @@ html`  import {
         onSelectChange?.(value);
       },
     });
+    const isEmpty = useIsEmpty({ isLoading, results, searchValue });
 
     useHandleKeyDown({ isOpen, setIsOpen });
-
-    const isEmpty = useMemo(
-      () => !isLoading && isOpen && searchValue.length > 0 && !results.length,
-      [isLoading, isOpen, searchValue, results],
-    );
 
     const context = useMemo<AutocompleteContextValue>(() => {
       return {
@@ -231,6 +244,7 @@ html`  import {
         handleSearch,
         handleSelect,
         setResults,
+        setIsOpen,
         clearStates: () => {
           setIsOpen(false);
           setSelectedValue(null);
@@ -261,7 +275,7 @@ html`  import {
   }
 
   export {
-    type AutocompleteOption,
+    type AutocompleteItemShape,
     type AutocompleteContextValue,
     type AutocompleteProviderProps,
     AutocompleteProvider,
