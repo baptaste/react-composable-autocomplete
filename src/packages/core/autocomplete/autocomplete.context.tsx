@@ -18,6 +18,7 @@ type AutocompleteContextValue = {
   isOpen: boolean;
   isLoading: boolean;
   isEmpty: boolean;
+  isError: boolean;
   results: Array<AutocompleteItemShape>;
   searchValue: string;
   selectedValue: string | null;
@@ -124,7 +125,25 @@ function useSelectedValue(
   return [selectedValue, setSelectedValue, handleSelectChange] as const;
 }
 
-function useHandleKeyDown(
+function useIsEmpty(
+  params: Pick<
+    AutocompleteContextValue,
+    "isLoading" | "results" | "searchValue"
+  >,
+): boolean {
+  const { isLoading, results, searchValue } = params;
+
+  const isEmpty = useMemo<boolean>(() => {
+    if (isLoading) {
+      return false;
+    }
+    return searchValue.length > 0 && results.length === 0;
+  }, [isLoading, searchValue, results]);
+
+  return isEmpty;
+}
+
+function useCloseOnKeyDown(
   params: Pick<AutocompleteContextValue, "isOpen" | "setIsOpen">,
 ): void {
   const { isOpen, setIsOpen } = params;
@@ -144,28 +163,11 @@ function useHandleKeyDown(
   }, [isOpen, setIsOpen]);
 }
 
-function useIsEmpty(
-  params: Pick<
-    AutocompleteContextValue,
-    "isLoading" | "results" | "searchValue"
-  >,
-): boolean {
-  const { isLoading, results, searchValue } = params;
-
-  const isEmpty = useMemo<boolean>(() => {
-    if (isLoading) {
-      return false;
-    }
-    return searchValue.length > 0 && results.length === 0;
-  }, [isLoading, searchValue, results]);
-
-  return isEmpty;
-}
-
 type AutocompleteProviderProps = PropsWithChildren<{
   defaultOpen?: boolean;
   open?: boolean;
   isLoading?: boolean;
+  isError?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSearchChange?: (search: string) => void;
   onSelectChange?: (value: string | null) => void;
@@ -176,6 +178,7 @@ function AutocompleteProvider({
   open,
   defaultOpen,
   isLoading = false,
+  isError = false,
   onOpenChange,
   onSearchChange,
   onSelectChange,
@@ -205,9 +208,9 @@ function AutocompleteProvider({
   });
   const isEmpty = useIsEmpty({ isLoading, results, searchValue });
 
-  useHandleKeyDown({ isOpen, setIsOpen });
+  useCloseOnKeyDown({ isOpen, setIsOpen });
 
-  const context = useMemo<AutocompleteContextValue>(() => {
+  const contextValue = useMemo<AutocompleteContextValue>(() => {
     return {
       isOpen,
       results,
@@ -215,6 +218,7 @@ function AutocompleteProvider({
       selectedValue,
       isLoading,
       isEmpty,
+      isError,
       handleSearch,
       handleSelect,
       setResults,
@@ -233,6 +237,7 @@ function AutocompleteProvider({
     selectedValue,
     isLoading,
     isEmpty,
+    isError,
     handleSearch,
     handleSelect,
     setIsOpen,
@@ -241,10 +246,10 @@ function AutocompleteProvider({
     setResults,
   ]);
 
-  console.log({ context });
+  console.log({ contextValue });
 
   return (
-    <AutocompleteContext.Provider value={context}>
+    <AutocompleteContext.Provider value={contextValue}>
       {children}
     </AutocompleteContext.Provider>
   );

@@ -50,6 +50,5 @@ html`  import tailwindAnimate from "tailwindcss-animate";
   export default {
     // rest of your config...
     plugins: [tailwindAnimate],
-  }
-`
+  }`;
 

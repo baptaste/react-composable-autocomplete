@@ -4,7 +4,7 @@ import { CodeBlock } from "../../components/code-block";
 export function ExampleUsageCode() {
   return (
     <div className="flex flex-col gap-y-4 md:w-1/2">
-      <h4 className="text-xl">Usage</h4>
+      <h4 className="text-foreground">Usage</h4>
       <CodeBlock lang="tsx" code={exampleUsageCode} />
     </div>
   );
@@ -20,8 +20,8 @@ html`  <Autocomplete isLoading={isLoading}>
         {data.map((item) => (
           <AutocompleteItem
             key={item.value}
-            value={item.value}
-            onSelectChange={handleSelect}
+           value={item.value}
+           onSelectChange={handleSelect}
           >
             {item.label}
           </AutocompleteItem>
@@ -29,6 +29,7 @@ html`  <Autocomplete isLoading={isLoading}>
         <AutocompleteLoading />
         <AutocompleteEmpty />
       </AutocompleteList>
+      <AutocompleteError />
     </AutocompleteContent>
   </Autocomplete>`;
 

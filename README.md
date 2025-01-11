@@ -23,6 +23,7 @@ A basic React/tailwind autocomplete component built with [shadcn/ui](https://ui.
       <AutocompleteLoading />
       <AutocompleteEmpty />
     </AutocompleteList>
+    <AutocompleteError />
   </AutocompleteContent>
 </Autocomplete>
 ```
@@ -55,6 +56,15 @@ export default {
 }
 ```
 
+### usehooks-ts
+
+The Autocomplete component uses the <u>useOnClickOutside</u> hook from [usehooks-ts](https://usehooks-ts.com/react-hook/use-on-click-outside) to handle its open state.<br />
+You can install it by running the following command:
+
+```bash
+npm install usehooks-ts
+```
+
 ### Command
 
 The Autocomplete component is built on top of the shadcn's version `<Command />` component.
@@ -74,7 +84,7 @@ data-[selected=true]:text-accent-foreground
 
 ### Context
 
-The Autocomplete global state is managed with the React Context api.
+The Autocomplete global state is managed with the React Context api.<br />
 Copy and paste the following code into your project:
 
 ```tsx
@@ -98,6 +108,7 @@ type AutocompleteContextValue = {
   isOpen: boolean;
   isLoading: boolean;
   isEmpty: boolean;
+  isError: boolean;
   results: Array<AutocompleteItemShape>;
   searchValue: string;
   selectedValue: string | null;
@@ -204,7 +215,25 @@ function useSelectedValue(
   return [selectedValue, setSelectedValue, handleSelectChange] as const;
 }
 
-function useHandleKeyDown(
+function useIsEmpty(
+  params: Pick<
+    AutocompleteContextValue,
+    "isLoading" | "results" | "searchValue"
+  >,
+): boolean {
+  const { isLoading, results, searchValue } = params;
+
+  const isEmpty = useMemo<boolean>(() => {
+    if (isLoading) {
+      return false;
+    }
+    return searchValue.length > 0 && results.length === 0;
+  }, [isLoading, searchValue, results]);
+
+  return isEmpty;
+}
+
+function useCloseOnKeyDown(
   params: Pick<AutocompleteContextValue, "isOpen" | "setIsOpen">,
 ): void {
   const { isOpen, setIsOpen } = params;
@@ -224,28 +253,11 @@ function useHandleKeyDown(
   }, [isOpen, setIsOpen]);
 }
 
-function useIsEmpty(
-  params: Pick<
-    AutocompleteContextValue,
-    "isLoading" | "results" | "searchValue"
-  >,
-): boolean {
-  const { isLoading, results, searchValue } = params;
-
-  const isEmpty = useMemo<boolean>(() => {
-    if (isLoading) {
-      return false;
-    }
-    return searchValue.length > 0 && results.length === 0;
-  }, [isLoading, searchValue, results]);
-
-  return isEmpty;
-}
-
 type AutocompleteProviderProps = PropsWithChildren<{
   defaultOpen?: boolean;
   open?: boolean;
   isLoading?: boolean;
+  isError?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSearchChange?: (search: string) => void;
   onSelectChange?: (value: string | null) => void;
@@ -256,6 +268,7 @@ function AutocompleteProvider({
   open,
   defaultOpen,
   isLoading = false,
+  isError = false,
   onOpenChange,
   onSearchChange,
   onSelectChange,
@@ -285,9 +298,9 @@ function AutocompleteProvider({
   });
   const isEmpty = useIsEmpty({ isLoading, results, searchValue });
 
-  useHandleKeyDown({ isOpen, setIsOpen });
+  useCloseOnKeyDown({ isOpen, setIsOpen });
 
-  const context = useMemo<AutocompleteContextValue>(() => {
+  const contextValue = useMemo<AutocompleteContextValue>(() => {
     return {
       isOpen,
       results,
@@ -295,6 +308,7 @@ function AutocompleteProvider({
       selectedValue,
       isLoading,
       isEmpty,
+      isError,
       handleSearch,
       handleSelect,
       setResults,
@@ -313,6 +327,7 @@ function AutocompleteProvider({
     selectedValue,
     isLoading,
     isEmpty,
+    isError,
     handleSearch,
     handleSelect,
     setIsOpen,
@@ -321,8 +336,10 @@ function AutocompleteProvider({
     setResults,
   ]);
 
+  console.log({ contextValue });
+
   return (
-    <AutocompleteContext.Provider value={context}>
+    <AutocompleteContext.Provider value={contextValue}>
       {children}
     </AutocompleteContext.Provider>
   );
@@ -344,9 +361,12 @@ Copy and paste the following code into your project:
 ```tsx
 import {
   forwardRef,
+  useCallback,
   useEffect,
+  useMemo,
   useRef,
   type ComponentPropsWithoutRef,
+  type KeyboardEvent,
   type MouseEvent,
 } from "react";
 // Replace with your own icon library
@@ -453,31 +473,52 @@ const AutocompleteInput = forwardRef<
     },
     ref,
   ) => {
-    const { results, isLoading, searchValue, selectedValue, handleSearch } =
-      useAutocomplete();
+    const {
+      results,
+      isError,
+      isLoading,
+      searchValue,
+      selectedValue,
+      handleSearch,
+      handleSelect,
+    } = useAutocomplete();
 
     const handleSearchChange = (search: string) => {
       handleSearch(search);
       onSearchChange?.(search);
     };
 
-    const inputValue =
-      results.find((item) => item.value === selectedValue)?.label ?? "";
+    const handleTabKeyPress = useCallback(
+      (e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Tab") {
+          handleSelect(results[0]?.value);
+        }
+      },
+      [handleSelect, results],
+    );
 
     return (
       <div
         className={cn(
-          "relative flex items-center rounded-md border border-input transition-colors focus-within:border-foreground focus-within:outline-none [&_*:is(div)]:w-full [&_*:is(div)]:border-b-0",
+          "relative flex items-center rounded-md border border-input transition-colors focus-within:outline-none [&_*:is(div)]:w-full [&_*:is(div)]:border-b-0",
+          isError && "border-destructive",
+          !isError && "focus-within:border-foreground",
           className,
         )}
       >
         <CommandInput
           ref={ref}
           id={id ? String(id) : undefined}
-          placeholder={isLoading ? "Loading..." : placeholderProp}
           className="pr-8 text-foreground"
-          value={searchValue.length > 0 ? searchValue : inputValue}
+          placeholder={isLoading ? "Loading..." : placeholderProp}
           onValueChange={handleSearchChange}
+          onKeyDown={handleTabKeyPress}
+          value={
+            searchValue.length > 0
+              ? searchValue
+              : (results.find((item) => item.value === selectedValue)?.label ??
+                "")
+          }
           {...props}
         />
         {children}
@@ -526,10 +567,14 @@ const AutocompleteList = forwardRef<
   ComponentPropsWithoutRef<typeof CommandGroup>
 >(({ children, className, ...props }, ref) => {
   const listRef = useRef<HTMLDivElement>(null);
-  const { isOpen, isLoading, isEmpty, results, setResults } = useAutocomplete();
+  const { isOpen, isError, isLoading, setResults } = useAutocomplete();
 
-  const state =
-    isOpen && (results.length > 0 || isLoading || isEmpty) ? "open" : "closed";
+  const state = useMemo<string>(() => {
+    if (isError) {
+      return "closed";
+    }
+    return isOpen || isLoading ? "open" : "closed";
+  }, [isError, isOpen, isLoading]);
 
   useEffect(() => {
     if (!isLoading && isOpen) {
@@ -643,6 +688,27 @@ const AutocompleteEmpty = forwardRef<
   );
 });
 
+const AutocompleteError = forwardRef<
+  HTMLParagraphElement,
+  ComponentPropsWithoutRef<"p">
+>(({ children, className, ...props }, ref) => {
+  const { isError } = useAutocomplete();
+
+  if (!isError) {
+    return null;
+  }
+
+  return (
+    <p
+      ref={ref}
+      {...props}
+      className={cn("mt-1 text-xs text-destructive", className)}
+    >
+      {children ?? "An error occurred. Please try again later."}
+    </p>
+  );
+});
+
 export {
   Autocomplete,
   AutocompleteLabel,
@@ -653,6 +719,7 @@ export {
   AutocompleteClear,
   AutocompleteLoading,
   AutocompleteEmpty,
+  AutocompleteError,
 };
 ```
 

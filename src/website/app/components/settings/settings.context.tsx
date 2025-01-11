@@ -7,62 +7,72 @@ import {
   type ReactNode,
 } from "react";
 
-const THEME_KEY = "--theme";
-const OUTPUT_KEY = "--show-output";
+import {
+  STORAGE_PLAYGROUND_ERROR_KEY,
+  STORAGE_PLAYGROUND_LOADING_KEY,
+  STORAGE_PLAYGROUND_OUTPUT_KEY,
+  STORAGE_ROOT_KEY,
+  STORAGE_THEME_KEY,
+} from "../../lib/constants";
 
 type Theme = "dark" | "light" | "system";
+
+type PlaygroundKey =
+  | typeof STORAGE_PLAYGROUND_OUTPUT_KEY
+  | typeof STORAGE_PLAYGROUND_ERROR_KEY
+  | typeof STORAGE_PLAYGROUND_LOADING_KEY;
 
 type SettingsContextType = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  showOutput: boolean;
-  setShowOutput: (showOutput: boolean) => void;
+  playground: {
+    [K in PlaygroundKey]: boolean;
+  };
+  setPlayground: (key: PlaygroundKey, value: boolean) => void;
 };
 
 const SettingsContext = createContext<SettingsContextType | null>(null);
 
-const useSettings = () => {
+function useSettings() {
   const context = useContext(SettingsContext);
 
-  if (!context) {
+  if (context === null) {
     throw new Error("useSettings must be used within a SettingsProvider");
   }
 
   return context;
-};
+}
 
-const SettingsProvider = ({
-  children,
-  defaultTheme = "system",
-  defaultShowOutput = true,
-  storageKey = "shadcn-autocomplete-settings",
-  ...props
-}: {
-  children: ReactNode;
-  defaultTheme?: Theme;
-  defaultShowOutput?: boolean;
-  storageKey?: string;
-}) => {
+function getStoragePlaygroundValue(
+  key: PlaygroundKey,
+  defaultValue = false,
+): boolean {
+  const value = localStorage.getItem(`${STORAGE_ROOT_KEY}${key}`);
+
+  if (value === null) {
+    return defaultValue;
+  }
+
+  return value === "true";
+}
+
+function setStoragePlaygroundValue(key: PlaygroundKey, value: boolean): void {
+  localStorage.setItem(`${STORAGE_ROOT_KEY}${key}`, value.toString());
+}
+
+function SettingsProvider({ children, ...props }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(
     () =>
-      (localStorage.getItem(`${storageKey}${THEME_KEY}`) as Theme) ||
-      defaultTheme,
+      (localStorage.getItem(
+        `${STORAGE_ROOT_KEY}${STORAGE_THEME_KEY}`,
+      ) as Theme) || "system",
   );
 
-  const getInitialShowOutput = () => {
-    const savedShowOutput = localStorage.getItem(`${storageKey}${OUTPUT_KEY}`);
-
-    if (savedShowOutput === "false") {
-      return false;
-    }
-    if (savedShowOutput === "true") {
-      return true;
-    }
-
-    return defaultShowOutput;
-  };
-
-  const [showOutput, setShowOutput] = useState<boolean>(getInitialShowOutput);
+  const [playground, setPlayground] = useState({
+    output: getStoragePlaygroundValue(STORAGE_PLAYGROUND_OUTPUT_KEY, true),
+    error: getStoragePlaygroundValue(STORAGE_PLAYGROUND_ERROR_KEY),
+    loading: getStoragePlaygroundValue(STORAGE_PLAYGROUND_LOADING_KEY),
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -86,25 +96,24 @@ const SettingsProvider = ({
     return {
       theme,
       setTheme: (theme: Theme) => {
-        localStorage.setItem(`${storageKey}${THEME_KEY}`, theme);
+        localStorage.setItem(`${STORAGE_ROOT_KEY}${STORAGE_THEME_KEY}`, theme);
         setTheme(theme);
       },
-      showOutput,
-      setShowOutput: (showOutput: boolean) => {
-        localStorage.setItem(
-          `${storageKey}${OUTPUT_KEY}`,
-          showOutput.toString(),
-        );
-        setShowOutput(showOutput);
+      playground,
+      setPlayground: (key: PlaygroundKey, value: boolean) => {
+        setStoragePlaygroundValue(key, value);
+        setPlayground((prev) => ({ ...prev, [key]: value }));
       },
     };
-  }, [storageKey, theme, showOutput, setTheme, setShowOutput]);
+  }, [theme, setTheme, playground, setPlayground]);
+
+  console.log("Settings context", { contextValue });
 
   return (
     <SettingsContext.Provider {...props} value={contextValue}>
       {children}
     </SettingsContext.Provider>
   );
-};
+}
 
-export { SettingsProvider, useSettings, type Theme };
+export { SettingsProvider, useSettings, type Theme, type PlaygroundKey };

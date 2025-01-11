@@ -1,11 +1,12 @@
 export function Hero() {
   return (
-    <div className="my-6 flex w-full flex-col items-center justify-between">
+    <div className="my-6 flex w-full flex-col items-center justify-between pt-14">
       <h1 className="mb-2 text-pretty text-4xl font-semibold text-foreground lg:text-5xl">
-        Shadcn Autocomplete
+        <span className="text-secondary-foreground/70">Shadcn basic</span>{" "}
+        Autocomplete
       </h1>
       <p className="text-balance text-secondary-foreground/40 sm:w-2/3 sm:text-center">
-        A basic React Autocomplete component built with{" "}
+        A basic word completion input field built with{" "}
         <a
           target="_blank"
           href="https://ui.shadcn.com/"

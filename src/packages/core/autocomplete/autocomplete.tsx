@@ -1,8 +1,11 @@
 import {
   forwardRef,
+  useCallback,
   useEffect,
+  useMemo,
   useRef,
   type ComponentPropsWithoutRef,
+  type KeyboardEvent,
   type MouseEvent,
 } from "react";
 // Replace with your own icon library
@@ -109,31 +112,52 @@ const AutocompleteInput = forwardRef<
     },
     ref,
   ) => {
-    const { results, isLoading, searchValue, selectedValue, handleSearch } =
-      useAutocomplete();
+    const {
+      results,
+      isError,
+      isLoading,
+      searchValue,
+      selectedValue,
+      handleSearch,
+      handleSelect,
+    } = useAutocomplete();
 
     const handleSearchChange = (search: string) => {
       handleSearch(search);
       onSearchChange?.(search);
     };
 
-    const inputValue =
-      results.find((item) => item.value === selectedValue)?.label ?? "";
+    const handleTabKeyPress = useCallback(
+      (e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Tab") {
+          handleSelect(results[0]?.value);
+        }
+      },
+      [handleSelect, results],
+    );
 
     return (
       <div
         className={cn(
-          "relative flex items-center rounded-md border border-input transition-colors focus-within:border-foreground focus-within:outline-none [&_*:is(div)]:w-full [&_*:is(div)]:border-b-0",
+          "relative flex items-center rounded-md border border-input transition-colors focus-within:outline-none [&_*:is(div)]:w-full [&_*:is(div)]:border-b-0",
+          isError && "border-destructive",
+          !isError && "focus-within:border-foreground",
           className,
         )}
       >
         <CommandInput
           ref={ref}
           id={id ? String(id) : undefined}
-          placeholder={isLoading ? "Loading..." : placeholderProp}
           className="pr-8 text-foreground"
-          value={searchValue.length > 0 ? searchValue : inputValue}
+          placeholder={isLoading ? "Loading..." : placeholderProp}
           onValueChange={handleSearchChange}
+          onKeyDown={handleTabKeyPress}
+          value={
+            searchValue.length > 0
+              ? searchValue
+              : (results.find((item) => item.value === selectedValue)?.label ??
+                "")
+          }
           {...props}
         />
         {children}
@@ -182,10 +206,14 @@ const AutocompleteList = forwardRef<
   ComponentPropsWithoutRef<typeof CommandGroup>
 >(({ children, className, ...props }, ref) => {
   const listRef = useRef<HTMLDivElement>(null);
-  const { isOpen, isLoading, isEmpty, results, setResults } = useAutocomplete();
+  const { isOpen, isError, isLoading, setResults } = useAutocomplete();
 
-  const state =
-    isOpen && (results.length > 0 || isLoading || isEmpty) ? "open" : "closed";
+  const state = useMemo<string>(() => {
+    if (isError) {
+      return "closed";
+    }
+    return isOpen || isLoading ? "open" : "closed";
+  }, [isError, isOpen, isLoading]);
 
   useEffect(() => {
     if (!isLoading && isOpen) {
@@ -299,6 +327,27 @@ const AutocompleteEmpty = forwardRef<
   );
 });
 
+const AutocompleteError = forwardRef<
+  HTMLParagraphElement,
+  ComponentPropsWithoutRef<"p">
+>(({ children, className, ...props }, ref) => {
+  const { isError } = useAutocomplete();
+
+  if (!isError) {
+    return null;
+  }
+
+  return (
+    <p
+      ref={ref}
+      {...props}
+      className={cn("mt-1 text-xs text-destructive", className)}
+    >
+      {children ?? "An error occurred. Please try again later."}
+    </p>
+  );
+});
+
 export {
   Autocomplete,
   AutocompleteLabel,
@@ -309,4 +358,5 @@ export {
   AutocompleteClear,
   AutocompleteLoading,
   AutocompleteEmpty,
+  AutocompleteError,
 };

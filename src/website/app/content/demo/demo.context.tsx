@@ -11,10 +11,10 @@ import type { AutocompleteItemShape } from "@/packages/core/autocomplete/autocom
 type DemoContextValue = {
   data: Array<AutocompleteItemShape>;
   isLoading: boolean;
+  isError: boolean;
   setData: (data: Array<AutocompleteItemShape>) => void;
-  setIsLoading: (isLoading: boolean) => void;
   handleSearch: (search: string) => void;
-  handleSelect: (value: string) => void;
+  handleSelect: (value: string | null) => void;
   handleClear: () => void;
 };
 
@@ -39,6 +39,7 @@ function DemoProvider({
 }) {
   const [data, setData] = useState<Array<AutocompleteItemShape>>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
 
   const handleSearch = useCallback(
     async (search: string) => {
@@ -46,16 +47,23 @@ function DemoProvider({
         setData([]);
         return;
       }
-      setIsLoading(true);
-      const data = await fetchDataFn(search);
-      setData(data);
-      setIsLoading(false);
+
+      try {
+        setIsLoading(true);
+        const data = await fetchDataFn(search);
+        setData(data);
+      } catch (error: unknown) {
+        console.error(error);
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
     },
     [fetchDataFn],
   );
 
   const handleSelect = useCallback(
-    (value: string) => {
+    (value: string | null) => {
       const item = data.find(
         (item) => item.value.toString() === value || item.label === value,
       );
@@ -71,15 +79,16 @@ function DemoProvider({
     () => ({
       data,
       isLoading,
+      isError,
       setData,
-      setIsLoading,
       handleSearch,
       handleSelect,
       handleClear: () => {
+        setIsError(false);
         setData([]);
       },
     }),
-    [data, isLoading, setData, setIsLoading, handleSearch, handleSelect],
+    [data, isLoading, isError, setData, handleSearch, handleSelect],
   );
 
   return (

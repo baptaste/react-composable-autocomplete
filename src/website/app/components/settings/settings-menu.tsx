@@ -14,27 +14,22 @@ import {
 import { Label } from "@/packages/core/ui/label";
 import { Switch } from "@/packages/core/ui/switch";
 
-import { useSettings, type Theme } from "./settings.context";
+import {
+  useSettings,
+  type PlaygroundKey,
+  type Theme,
+} from "./settings.context";
 
 type ThemeOption = { label: string; value: Theme };
 
 const themeOptions: ThemeOption[] = [
-  {
-    value: "dark",
-    label: "Dark",
-  },
-  {
-    value: "light",
-    label: "Light",
-  },
-  {
-    value: "system",
-    label: "System",
-  },
+  { value: "dark", label: "Dark" },
+  { value: "light", label: "Light" },
+  { value: "system", label: "System" },
 ];
 
 export function SettingsMenu() {
-  const { theme, setTheme, showOutput, setShowOutput } = useSettings();
+  const { theme, setTheme, playground, setPlayground } = useSettings();
 
   return (
     <DropdownMenu>
@@ -44,9 +39,9 @@ export function SettingsMenu() {
           <span className="hidden md:block">Settings</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="mr-6">
+
+      <DropdownMenuContent className="mr-6 min-w-[200px]">
         <DropdownMenuLabel>Theme</DropdownMenuLabel>
-        <DropdownMenuSeparator />
         <DropdownMenuGroup>
           {themeOptions.map((option) => (
             <DropdownMenuCheckboxItem
@@ -61,19 +56,26 @@ export function SettingsMenu() {
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="output"
-              checked={showOutput}
-              onCheckedChange={setShowOutput}
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-            />
-            <Label htmlFor="output">Output</Label>
-          </div>
-        </DropdownMenuItem>
+        <DropdownMenuLabel>Playground</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          {Object.entries(playground).map(([key, value]) => (
+            <DropdownMenuItem key={key}>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id={key}
+                  onClick={(e) => e.stopPropagation()}
+                  checked={value}
+                  onCheckedChange={(checked) =>
+                    setPlayground(key as PlaygroundKey, checked)
+                  }
+                />
+                <Label htmlFor={key} className="capitalize">
+                  {key}
+                </Label>
+              </div>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
