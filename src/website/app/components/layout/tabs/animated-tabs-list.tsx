@@ -26,17 +26,17 @@ export function AnimatedTabsList({
     <div
       ref={triggerRef}
       data-expanded={expanded}
+      role="button"
       className={cn(
         "group z-20 h-10 w-10",
         "fixed bottom-16 left-1/2 right-1/2 -translate-x-1/2",
         "flex items-center justify-center",
-        "rounded-md border bg-background",
+        "rounded-md border bg-background shadow",
         "ease transition-[width] delay-300 duration-150",
         "data-[expanded=true]:w-[calc(100vw-32px)] data-[expanded=true]:sm:w-[400px]",
       )}
     >
       <EllipsisIcon
-        role="button"
         data-expanded={expanded}
         onClick={() => setIsExpanded(true)}
         className={cn(
