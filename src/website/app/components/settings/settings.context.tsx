@@ -107,8 +107,6 @@ function SettingsProvider({ children, ...props }: { children: ReactNode }) {
     };
   }, [theme, setTheme, playground, setPlayground]);
 
-  console.log("Settings context", { contextValue });
-
   return (
     <SettingsContext.Provider {...props} value={contextValue}>
       {children}

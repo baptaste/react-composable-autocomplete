@@ -40,7 +40,7 @@ export function SettingsMenu() {
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent className="mr-6 min-w-[200px]">
+      <DropdownMenuContent className="mr-4 min-w-[200px]">
         <DropdownMenuLabel>Theme</DropdownMenuLabel>
         <DropdownMenuGroup>
           {themeOptions.map((option) => (

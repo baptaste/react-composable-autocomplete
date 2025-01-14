@@ -11,7 +11,7 @@ export function ExampleUsageCode() {
 }
 
 const exampleUsageCode =
-html`  <Autocomplete isLoading={isLoading}>
+html`  <Autocomplete isLoading={isLoading} isError={isError}>
     <AutocompleteContent>
       <AutocompleteInput onSearchChange={handleSearch}>
         <AutocompleteClear onClear={handleClear} />
