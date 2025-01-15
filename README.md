@@ -5,12 +5,11 @@ A basic React/tailwind autocomplete component built with [shadcn/ui](https://ui.
 ## Example usage
 
 ```tsx
-<Autocomplete isLoading={isLoading}>
+<Autocomplete isLoading={isLoading} isError={isError}>
   <AutocompleteContent>
     <AutocompleteInput onSearchChange={handleSearch}>
       <AutocompleteClear onClear={handleClear} />
     </AutocompleteInput>
-    <AutocompleteError />
     <AutocompleteList>
       {data.map((item) => (
         <AutocompleteItem
@@ -24,6 +23,7 @@ A basic React/tailwind autocomplete component built with [shadcn/ui](https://ui.
       <AutocompleteLoading />
       <AutocompleteEmpty />
     </AutocompleteList>
+    <AutocompleteError />
   </AutocompleteContent>
 </Autocomplete>
 ```
