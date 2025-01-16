@@ -171,7 +171,7 @@ const AutocompleteClear = forwardRef<
       variant="ghost"
       onClick={handleClear}
       className={cn(
-        "group pointer-events-none absolute right-0 opacity-0 transition-opacity hover:bg-transparent",
+        "group pointer-events-none absolute right-0 opacity-0 transition-opacity hover:bg-transparent focus-visible:ring-0",
         (isOpen || searchValue.length > 0 || !!selectedValue) &&
           "pointer-events-auto opacity-100",
         className,

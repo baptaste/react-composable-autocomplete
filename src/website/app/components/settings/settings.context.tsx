@@ -43,21 +43,16 @@ function useSettings() {
   return context;
 }
 
-function getStoragePlaygroundValue(
-  key: PlaygroundKey,
-  defaultValue = false,
-): boolean {
-  const value = localStorage.getItem(`${STORAGE_ROOT_KEY}${key}`);
+function getStoragePlaygroundOutputValue(): boolean {
+  const value = localStorage.getItem(
+    `${STORAGE_ROOT_KEY}${STORAGE_PLAYGROUND_OUTPUT_KEY}`,
+  );
 
   if (value === null) {
-    return defaultValue;
+    return false;
   }
 
   return value === "true";
-}
-
-function setStoragePlaygroundValue(key: PlaygroundKey, value: boolean): void {
-  localStorage.setItem(`${STORAGE_ROOT_KEY}${key}`, value.toString());
 }
 
 function SettingsProvider({ children, ...props }: { children: ReactNode }) {
@@ -69,9 +64,9 @@ function SettingsProvider({ children, ...props }: { children: ReactNode }) {
   );
 
   const [playground, setPlayground] = useState({
-    output: getStoragePlaygroundValue(STORAGE_PLAYGROUND_OUTPUT_KEY, true),
-    error: getStoragePlaygroundValue(STORAGE_PLAYGROUND_ERROR_KEY),
-    loading: getStoragePlaygroundValue(STORAGE_PLAYGROUND_LOADING_KEY),
+    output: getStoragePlaygroundOutputValue(),
+    error: false,
+    loading: false,
   });
 
   useEffect(() => {
@@ -101,8 +96,22 @@ function SettingsProvider({ children, ...props }: { children: ReactNode }) {
       },
       playground,
       setPlayground: (key: PlaygroundKey, value: boolean) => {
-        setStoragePlaygroundValue(key, value);
-        setPlayground((prev) => ({ ...prev, [key]: value }));
+        switch (key) {
+          case "error":
+            setPlayground((prev) => ({ ...prev, error: true, loading: false }));
+            break;
+          case "loading":
+            setPlayground((prev) => ({ ...prev, loading: true, error: false }));
+            break;
+          case "output": {
+            localStorage.setItem(
+              `${STORAGE_ROOT_KEY}${STORAGE_PLAYGROUND_OUTPUT_KEY}`,
+              value.toString(),
+            );
+            setPlayground((prev) => ({ ...prev, output: value }));
+            break;
+          }
+        }
       },
     };
   }, [theme, setTheme, playground, setPlayground]);

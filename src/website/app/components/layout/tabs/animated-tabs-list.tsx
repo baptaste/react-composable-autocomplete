@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { EllipsisIcon } from "lucide-react";
 import { useOnClickOutside } from "usehooks-ts";
 
@@ -22,11 +22,14 @@ export function AnimatedTabsList({
     setIsExpanded(false);
   });
 
+  const handleTriggerClick = useCallback(() => {
+    setTimeout(() => setIsExpanded(false), 150);
+  }, []);
+
   return (
     <div
       ref={triggerRef}
       data-expanded={expanded}
-      role="button"
       className={cn(
         "group z-20 h-10 w-10",
         "fixed bottom-16 left-1/2 right-1/2 -translate-x-1/2",
@@ -36,16 +39,18 @@ export function AnimatedTabsList({
         "data-[expanded=true]:w-[calc(100vw-32px)] data-[expanded=true]:sm:w-[400px]",
       )}
     >
-      <EllipsisIcon
+      <button
         data-expanded={expanded}
         onClick={() => setIsExpanded(true)}
         className={cn(
-          "block h-5 w-5 text-foreground group-hover:text-foreground/50",
+          "flex h-full w-full items-center justify-center",
           "ease opacity-100 transition-all duration-150",
           "data-[expanded=true]:absolute data-[expanded=true]:-z-10 data-[expanded=true]:opacity-0",
           "data-[expanded=false]:delay-300",
         )}
-      />
+      >
+        <EllipsisIcon className="block h-5 w-5 text-foreground transition-colors group-hover:text-foreground/50" />
+      </button>
       <TabsList
         defaultValue={defaultValue}
         data-expanded={expanded}
@@ -62,6 +67,7 @@ export function AnimatedTabsList({
             key={item.value}
             value={item.value}
             data-expanded={expanded}
+            onClick={handleTriggerClick}
             className={cn(
               "ease pointer-events-none opacity-0 transition-opacity delay-300 duration-150",
               "data-[expanded=true]:pointer-events-auto data-[expanded=true]:opacity-100",

@@ -13,10 +13,12 @@ async function getHighlightedHtmlCodeString(
     langs: [lang],
   });
 
-  return highlighter.codeToHtml(code, {
+  const html = highlighter.codeToHtml(code, {
     lang,
     theme: CODE_HIGHLIGHTER_THEME,
   });
+
+  return { highlighter, html };
 }
 
 export { type CodeHighlightLang, getHighlightedHtmlCodeString };

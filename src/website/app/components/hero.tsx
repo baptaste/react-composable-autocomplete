@@ -6,7 +6,7 @@ export function Hero() {
         Autocomplete
       </h1>
       <p className="w-full text-balance text-center text-secondary-foreground/40 sm:w-2/3">
-        A basic word completion input field built with{" "}
+        Autocomplete compound component for React, built with{" "}
         <a
           target="_blank"
           href="https://ui.shadcn.com/"
@@ -22,7 +22,8 @@ export function Hero() {
         >
           cmdk
         </a>
-        .
+        . <br /> Sync or async, built-in loading, error and empty states. Basic,
+        flexible, open source.
       </p>
     </div>
   );

@@ -1,6 +1,6 @@
 # Shadcn Basic Autocomplete
 
-A basic React/tailwind autocomplete component built with [shadcn/ui](https://ui.shadcn.com/) and [cmdk's Command](https://cmdk.paco.me/).
+Autocomplete compound component for React, built with [shadcn/ui](https://ui.shadcn.com/) and [cmdk](https://cmdk.paco.me/). <br /> Sync or async, built-in loading, error and empty states. Basic, flexible, open source.
 
 ## Example usage
 
@@ -530,7 +530,7 @@ const AutocompleteClear = forwardRef<
       variant="ghost"
       onClick={handleClear}
       className={cn(
-        "group pointer-events-none absolute right-0 opacity-0 transition-opacity hover:bg-transparent",
+        "group pointer-events-none absolute right-0 opacity-0 transition-opacity hover:bg-transparent focus-visible:ring-0",
         (isOpen || searchValue.length > 0 || !!selectedValue) &&
           "pointer-events-auto opacity-100",
         className,

@@ -28,7 +28,17 @@ export function CodeBlock({
   const [html, setHtml] = useState<string>("");
 
   useEffect(() => {
-    getHighlightedHtmlCodeString(code, lang).then(setHtml);
+    const init = async () => {
+      const { highlighter, html } = await getHighlightedHtmlCodeString(
+        code,
+        lang,
+      );
+      setHtml(html);
+
+      return highlighter.dispose();
+    };
+
+    init();
   }, [code, lang]);
 
   return (

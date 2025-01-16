@@ -10,6 +10,7 @@ export function AppTabs() {
     <Tabs
       defaultValue="demo"
       className="mt-6 flex w-full flex-col items-center justify-center"
+      onValueChange={(value) => console.log("Tabs onValueChange", value)}
     >
       <TabsContent
         value="demo"
