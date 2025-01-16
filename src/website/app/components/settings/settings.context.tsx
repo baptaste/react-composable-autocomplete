@@ -98,10 +98,18 @@ function SettingsProvider({ children, ...props }: { children: ReactNode }) {
       setPlayground: (key: PlaygroundKey, value: boolean) => {
         switch (key) {
           case "error":
-            setPlayground((prev) => ({ ...prev, error: true, loading: false }));
+            setPlayground((prev) => ({
+              ...prev,
+              error: value,
+              loading: false,
+            }));
             break;
           case "loading":
-            setPlayground((prev) => ({ ...prev, loading: true, error: false }));
+            setPlayground((prev) => ({
+              ...prev,
+              loading: value,
+              error: false,
+            }));
             break;
           case "output": {
             localStorage.setItem(
