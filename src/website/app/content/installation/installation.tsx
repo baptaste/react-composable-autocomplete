@@ -1,4 +1,3 @@
-import { AutocompletePlayground } from "../../components/autocomplete-playground/autocomplete-playground";
 import { Hero } from "../../components/hero";
 import { InstallationClickOutsideHookCode } from "./installation-click-outside-hook.code";
 import { InstallationCommandCode } from "./installation-command.code";
@@ -11,10 +10,8 @@ export function Installation() {
   return (
     <div className="flex w-full flex-col md:pt-24">
       <Hero>
-        {/* <AutocompletePlayground /> */}
         <h1 className="text-3xl">Installation</h1>
       </Hero>
-      {/* <h1 className="mb-6 text-3xl">Installation</h1> */}
       <InstallationPrerequisiteCode />
       <InstallationTailwindAnimateCode />
       <InstallationClickOutsideHookCode />
