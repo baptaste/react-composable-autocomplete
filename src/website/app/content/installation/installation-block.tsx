@@ -25,9 +25,7 @@ const InstallationBlockDescription = ({
 }: {
   children?: ReactNode;
 }) => {
-  return (
-    <span className="text-pretty text-secondary-foreground/40">{children}</span>
-  );
+  return <span className="text-pretty text-muted-foreground">{children}</span>;
 };
 
 export {

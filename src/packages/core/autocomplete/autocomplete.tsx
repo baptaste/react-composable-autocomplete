@@ -222,7 +222,7 @@ const AutocompleteList = forwardRef<
       ref={ref}
       data-state={state}
       className={cn(
-        "z-10 mt-1.5 max-h-[168px] overflow-y-auto",
+        "z-10 mt-1.5 overflow-y-hidden",
         "absolute left-0 right-0 top-full",
         "rounded-md border bg-background",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -233,7 +233,7 @@ const AutocompleteList = forwardRef<
       )}
       {...props}
     >
-      <CommandList ref={listRef} className="overflow-y-hidden">
+      <CommandList ref={listRef} className="max-h-[168px]">
         {children}
       </CommandList>
     </CommandGroup>

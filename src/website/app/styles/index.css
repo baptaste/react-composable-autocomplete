@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 @fontface {
-  font-family: "Poppins", sans-serif;
-  src: url("https://fonts.googleapis.com/css?family=Poppins");
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 @layer base {
@@ -63,6 +63,7 @@
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
-    font-family: "Poppins", sans-serif;
+    font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+      "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   }
 }

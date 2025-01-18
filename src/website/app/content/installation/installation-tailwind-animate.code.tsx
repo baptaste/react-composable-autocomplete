@@ -18,7 +18,7 @@ export function InstallationTailwindAnimateCode() {
           <a
             target="_blank"
             href="https://github.com/jamiebuilds/tailwindcss-animate"
-            className="text-foreground transition-colors hover:text-secondary-foreground/40"
+            className="text-foreground transition-colors hover:text-muted-foreground"
           >
             tailwindcss-animate plugin
           </a>

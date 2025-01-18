@@ -21,7 +21,7 @@ export function InstallationPrerequisiteCode() {
           <a
             target="_blank"
             href="https://ui.shadcn.com/docs/installation"
-            className="text-foreground transition-colors hover:text-secondary-foreground/40"
+            className="text-foreground transition-colors hover:text-muted-foreground"
           >
             shadcn/ui installation guide{" "}
           </a>

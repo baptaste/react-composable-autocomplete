@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -8,27 +9,30 @@ import {
 } from "react";
 
 import {
-  STORAGE_PLAYGROUND_ERROR_KEY,
-  STORAGE_PLAYGROUND_LOADING_KEY,
-  STORAGE_PLAYGROUND_OUTPUT_KEY,
+  PLAYGROUND_EMPTY_KEY,
+  PLAYGROUND_ERROR_KEY,
+  PLAYGROUND_LOADING_KEY,
+  PLAYGROUND_OUTPUT_KEY,
   STORAGE_ROOT_KEY,
-  STORAGE_THEME_KEY,
+  THEME_KEY,
 } from "../../lib/constants";
 
 type Theme = "dark" | "light" | "system";
 
 type PlaygroundKey =
-  | typeof STORAGE_PLAYGROUND_OUTPUT_KEY
-  | typeof STORAGE_PLAYGROUND_ERROR_KEY
-  | typeof STORAGE_PLAYGROUND_LOADING_KEY;
+  | typeof PLAYGROUND_OUTPUT_KEY
+  | typeof PLAYGROUND_ERROR_KEY
+  | typeof PLAYGROUND_LOADING_KEY
+  | typeof PLAYGROUND_EMPTY_KEY;
+
+type Playground = { [K in PlaygroundKey]: boolean };
 
 type SettingsContextType = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  playground: {
-    [K in PlaygroundKey]: boolean;
-  };
+  playground: Playground;
   setPlayground: (key: PlaygroundKey, value: boolean) => void;
+  resetPlayground: () => void;
 };
 
 const SettingsContext = createContext<SettingsContextType | null>(null);
@@ -45,29 +49,35 @@ function useSettings() {
 
 function getStoragePlaygroundOutputValue(): boolean {
   const value = localStorage.getItem(
-    `${STORAGE_ROOT_KEY}${STORAGE_PLAYGROUND_OUTPUT_KEY}`,
+    `${STORAGE_ROOT_KEY}${PLAYGROUND_OUTPUT_KEY}`,
   );
 
   if (value === null) {
-    return false;
+    return true;
   }
 
   return value === "true";
 }
 
+const initialPlayground: Playground = {
+  output: getStoragePlaygroundOutputValue(),
+  error: false,
+  loading: false,
+  empty: false,
+};
+
 function SettingsProvider({ children, ...props }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(
     () =>
-      (localStorage.getItem(
-        `${STORAGE_ROOT_KEY}${STORAGE_THEME_KEY}`,
-      ) as Theme) || "system",
+      (localStorage.getItem(`${STORAGE_ROOT_KEY}${THEME_KEY}`) as Theme) ||
+      "system",
   );
 
-  const [playground, setPlayground] = useState({
-    output: getStoragePlaygroundOutputValue(),
-    error: false,
-    loading: false,
-  });
+  const [playground, setPlayground] = useState<Playground>(initialPlayground);
+
+  const resetPlayground = useCallback(() => {
+    setPlayground(initialPlayground);
+  }, []);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -91,17 +101,26 @@ function SettingsProvider({ children, ...props }: { children: ReactNode }) {
     return {
       theme,
       setTheme: (theme: Theme) => {
-        localStorage.setItem(`${STORAGE_ROOT_KEY}${STORAGE_THEME_KEY}`, theme);
+        localStorage.setItem(`${STORAGE_ROOT_KEY}${THEME_KEY}`, theme);
         setTheme(theme);
       },
       playground,
       setPlayground: (key: PlaygroundKey, value: boolean) => {
         switch (key) {
+          case "output": {
+            localStorage.setItem(
+              `${STORAGE_ROOT_KEY}${PLAYGROUND_OUTPUT_KEY}`,
+              value.toString(),
+            );
+            setPlayground((prev) => ({ ...prev, output: value }));
+            break;
+          }
           case "error":
             setPlayground((prev) => ({
               ...prev,
               error: value,
               loading: false,
+              empty: false,
             }));
             break;
           case "loading":
@@ -109,20 +128,22 @@ function SettingsProvider({ children, ...props }: { children: ReactNode }) {
               ...prev,
               loading: value,
               error: false,
+              empty: false,
             }));
             break;
-          case "output": {
-            localStorage.setItem(
-              `${STORAGE_ROOT_KEY}${STORAGE_PLAYGROUND_OUTPUT_KEY}`,
-              value.toString(),
-            );
-            setPlayground((prev) => ({ ...prev, output: value }));
+          case "empty":
+            setPlayground((prev) => ({
+              ...prev,
+              empty: value,
+              loading: false,
+              error: false,
+            }));
             break;
-          }
         }
       },
+      resetPlayground,
     };
-  }, [theme, setTheme, playground, setPlayground]);
+  }, [theme, setTheme, playground, setPlayground, resetPlayground]);
 
   return (
     <SettingsContext.Provider {...props} value={contextValue}>

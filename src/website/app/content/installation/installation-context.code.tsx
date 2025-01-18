@@ -83,6 +83,12 @@ html`  import {
 
     const isOpen = params.open ?? open;
 
+    useEffect(() => {
+      if (params.defaultOpen) {
+        setOpen(params.defaultOpen);
+      }
+    }, [params.defaultOpen]);
+
     const setIsOpen = useCallback(
       (open: boolean) => {
         setOpen(open);
@@ -98,12 +104,19 @@ html`  import {
     params: Pick<
       AutocompleteContextValue,
       "isOpen" | "setIsOpen" | "results" | "setResults"
-    > & {
-      onSearchChange?: (search: string) => void;
-    },
+    > &
+      Pick<AutocompleteProviderProps, "defaultValue" | "onSearchChange">,
   ) {
-    const [searchValue, setSearchValue] = useState<string>("");
+    const [searchValue, setSearchValue] = useState<string>(
+      params.defaultValue ?? "",
+    );
     const deferredValue = useDeferredValue(searchValue);
+
+    useEffect(() => {
+      if (params.defaultValue) {
+        setSearchValue(params.defaultValue);
+      }
+    }, [params.defaultValue]);
 
     const handleSearchChange = useCallback(
       (value: string) => {
@@ -190,8 +203,9 @@ html`  import {
   }
 
   type AutocompleteProviderProps = PropsWithChildren<{
-    defaultOpen?: boolean;
     open?: boolean;
+    defaultOpen?: boolean;
+    defaultValue?: string;
     isLoading?: boolean;
     isError?: boolean;
     onOpenChange?: (open: boolean) => void;
@@ -203,6 +217,7 @@ html`  import {
     children,
     open,
     defaultOpen,
+    defaultValue,
     isLoading = false,
     isError = false,
     onOpenChange,
@@ -212,6 +227,7 @@ html`  import {
     const [results, setResults] = useState<Array<AutocompleteItemShape>>([]);
     const [isOpen, setIsOpen] = useIsOpen({ open, defaultOpen, onOpenChange });
     const [searchValue, setSearchValue, handleSearch] = useSearchValue({
+      defaultValue,
       isOpen,
       setIsOpen,
       results,
@@ -271,8 +287,6 @@ html`  import {
       setSearchValue,
       setResults,
     ]);
-
-    console.log({ contextValue });
 
     return (
       <AutocompleteContext.Provider value={contextValue}>

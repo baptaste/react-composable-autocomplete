@@ -18,7 +18,7 @@ export function InstallationClickOutsideHookCode() {
           <a
             target="_blank"
             href="https://usehooks-ts.com/react-hook/use-on-click-outside"
-            className="text-foreground transition-colors hover:text-secondary-foreground/40"
+            className="text-foreground transition-colors hover:text-muted-foreground"
           >
             usehooks-ts
           </a>

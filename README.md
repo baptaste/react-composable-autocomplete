@@ -1,6 +1,6 @@
 # Shadcn Basic Autocomplete
 
-Autocomplete compound component for React, built with [shadcn/ui](https://ui.shadcn.com/) and [cmdk](https://cmdk.paco.me/). <br /> Sync or async, built-in loading, error and empty states. Basic, flexible, open source.
+An autocomplete compound component for React. Sync or async, built-in loading, error and empty states. <br /> Built with [shadcn/ui](https://ui.shadcn.com/) and [cmdk](https://cmdk.paco.me/).
 
 ## Example usage
 
@@ -147,6 +147,12 @@ function useIsOpen(
 
   const isOpen = params.open ?? open;
 
+  useEffect(() => {
+    if (params.defaultOpen) {
+      setOpen(params.defaultOpen);
+    }
+  }, [params.defaultOpen]);
+
   const setIsOpen = useCallback(
     (open: boolean) => {
       setOpen(open);
@@ -162,12 +168,19 @@ function useSearchValue(
   params: Pick<
     AutocompleteContextValue,
     "isOpen" | "setIsOpen" | "results" | "setResults"
-  > & {
-    onSearchChange?: (search: string) => void;
-  },
+  > &
+    Pick<AutocompleteProviderProps, "defaultValue" | "onSearchChange">,
 ) {
-  const [searchValue, setSearchValue] = useState<string>("");
+  const [searchValue, setSearchValue] = useState<string>(
+    params.defaultValue ?? "",
+  );
   const deferredValue = useDeferredValue(searchValue);
+
+  useEffect(() => {
+    if (params.defaultValue) {
+      setSearchValue(params.defaultValue);
+    }
+  }, [params.defaultValue]);
 
   const handleSearchChange = useCallback(
     (value: string) => {
@@ -254,8 +267,9 @@ function useCloseOnKeyDown(
 }
 
 type AutocompleteProviderProps = PropsWithChildren<{
-  defaultOpen?: boolean;
   open?: boolean;
+  defaultOpen?: boolean;
+  defaultValue?: string;
   isLoading?: boolean;
   isError?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -267,6 +281,7 @@ function AutocompleteProvider({
   children,
   open,
   defaultOpen,
+  defaultValue,
   isLoading = false,
   isError = false,
   onOpenChange,
@@ -276,6 +291,7 @@ function AutocompleteProvider({
   const [results, setResults] = useState<Array<AutocompleteItemShape>>([]);
   const [isOpen, setIsOpen] = useIsOpen({ open, defaultOpen, onOpenChange });
   const [searchValue, setSearchValue, handleSearch] = useSearchValue({
+    defaultValue,
     isOpen,
     setIsOpen,
     results,
@@ -581,7 +597,7 @@ const AutocompleteList = forwardRef<
       ref={ref}
       data-state={state}
       className={cn(
-        "z-10 mt-1.5 max-h-[168px] overflow-y-auto",
+        "z-10 mt-1.5 overflow-y-hidden",
         "absolute left-0 right-0 top-full",
         "rounded-md border bg-background",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -592,7 +608,7 @@ const AutocompleteList = forwardRef<
       )}
       {...props}
     >
-      <CommandList ref={listRef} className="overflow-y-hidden">
+      <CommandList ref={listRef} className="max-h-[168px]">
         {children}
       </CommandList>
     </CommandGroup>

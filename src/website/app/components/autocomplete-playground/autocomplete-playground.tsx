@@ -10,24 +10,34 @@ import {
   AutocompleteLoading,
 } from "@/packages/core/autocomplete/autocomplete";
 
-import { useSettings } from "../../components/settings/settings.context";
-import { useDemo } from "../demo/demo.context";
+import { useDemo } from "../../content/demo/demo.context";
+import { useSettings } from "../settings/settings.context";
 
-export function Playground() {
-  const { playground } = useSettings();
+export function AutocompletePlayground() {
+  const { playground, resetPlayground } = useSettings();
   const { data, isLoading, isError, handleClear, handleSearch, handleSelect } =
     useDemo();
 
   return (
     <Autocomplete
-      className="mb-16 md:max-w-[350px]"
+      className="md:max-w-[350px]"
       isLoading={isLoading || playground.loading}
       isError={isError || playground.error}
-      onSelectChange={handleSelect}
+      // simulate empty state
+      defaultValue={playground.empty ? "asdfasdfasdf" : undefined}
+      defaultOpen={playground.empty}
     >
       <AutocompleteContent>
-        <AutocompleteInput onSearchChange={handleSearch}>
-          <AutocompleteClear onClear={handleClear} />
+        <AutocompleteInput
+          placeholder="Search movies..."
+          onSearchChange={handleSearch}
+        >
+          <AutocompleteClear
+            onClear={() => {
+              handleClear();
+              resetPlayground();
+            }}
+          />
         </AutocompleteInput>
         <AutocompleteList className="z-50">
           {data.map((item) => (

@@ -8,17 +8,17 @@ export function AppTabs() {
   return (
     <Tabs
       defaultValue="demo"
-      className="mt-6 flex w-full flex-col items-center justify-center"
+      className="flex w-full flex-col items-center justify-center"
     >
       <TabsContent
         value="demo"
-        className="block w-full data-[state=active]:mb-20"
+        className="block w-full data-[state=active]:mb-20 data-[state=active]:mt-0"
       >
         <Demo />
       </TabsContent>
       <TabsContent
         value="install"
-        className="block w-full data-[state=active]:mb-20"
+        className="block w-full data-[state=active]:mb-20 data-[state=active]:mt-0"
       >
         <Installation />
       </TabsContent>

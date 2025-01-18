@@ -6,7 +6,7 @@ import { CodeBlock } from "../../components/code-block";
 export function ExampleUsageCode({ className }: { className?: string }) {
   return (
     <div className={cn("flex flex-col gap-y-4 md:w-1/2", className)}>
-      <h4 className="text-foreground">Usage</h4>
+      <h4 className="text-foreground">Example usage</h4>
       <CodeBlock lang="tsx" code={exampleUsageCode} />
     </div>
   );

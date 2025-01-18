@@ -10,7 +10,7 @@ export function OutputBlock() {
       <CodeBlock
         lang="json"
         code={JSON.stringify(data, null, 2)}
-        className="md:h-[454.5px] md:min-w-[400px]"
+        className="max-h-[454.5px] md:h-[454.5px] md:min-w-[400px]"
         lineNumbers={false}
         copy={false}
       />

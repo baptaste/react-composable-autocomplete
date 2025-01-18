@@ -28,7 +28,7 @@ export function InstallationCommandCode() {
         <a
           target="_blank"
           href="https://ui.shadcn.com/docs/components/command"
-          className="text-foreground transition-colors hover:text-secondary-foreground/40"
+          className="text-foreground transition-colors hover:text-muted-foreground"
         >
           installation guide
         </a>
