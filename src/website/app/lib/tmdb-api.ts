@@ -19,7 +19,11 @@ export async function fetchTmdbMovies(
 
   return data.results.map(
     (movie: { id: number; title: string; release_date: string }) => {
-      const year = new Date(movie.release_date).getFullYear();
+      const year =
+        movie.release_date?.length > 0
+          ? new Date(movie.release_date).getFullYear()
+          : "N/A";
+
       return {
         label: `${movie.title} (${year})`,
         value: movie.id,

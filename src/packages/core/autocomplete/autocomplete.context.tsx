@@ -262,8 +262,6 @@ function AutocompleteProvider({
     setResults,
   ]);
 
-  console.log({ contextValue });
-
   return (
     <AutocompleteContext.Provider value={contextValue}>
       {children}

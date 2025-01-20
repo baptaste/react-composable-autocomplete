@@ -1,42 +1,47 @@
 import { Button } from "@/packages/core/ui/button";
 import { cn } from "@/packages/core/utils/cn";
 
-import { AutocompletePlayground } from "../../components/autocomplete-playground/autocomplete-playground";
+import { AutocompletePlayground } from "../../components/autocomplete-playground";
 import { Description } from "../../components/description";
-import { ExampleUsageCode } from "../../components/example-usage/example-usage.code";
+import { ExampleUsageCode } from "../../components/example-usage.code";
 import { Hero } from "../../components/hero";
 import { OutputBlock } from "../../components/output-block";
-import {
-  PlaygroundKey,
-  useSettings,
-} from "../../components/settings/settings.context";
+import { useDemo, type PlaygroundOption } from "./demo.context";
 
 export function Demo() {
-  const { playground, setPlayground } = useSettings();
+  const { isError, isLoading, isEmpty, showOutput, updatePlayground } =
+    useDemo();
+
+  const playgroundState = {
+    output: showOutput,
+    error: isError,
+    loading: isLoading,
+    empty: isEmpty,
+  };
 
   return (
-    <div className="flex w-full flex-col md:pt-24">
+    <div className="flex w-full flex-col gap-y-8">
       <Hero>
         <AutocompletePlayground />
         <Description />
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-4 md:pt-8">
-          {Object.entries(playground).map(([key, active]) => (
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
+          {Object.entries(playgroundState).map(([option, active]) => (
             <Button
-              key={key}
+              key={option}
               variant={active ? "default" : "outline"}
-              className={cn("min-w-10 rounded-3xl capitalize")}
+              className={cn("h-6 min-w-10 rounded-3xl px-2 text-xs capitalize")}
               onClick={() => {
-                setPlayground(key as PlaygroundKey, !active);
+                updatePlayground(option as PlaygroundOption, !active);
               }}
             >
-              {key}
+              {option}
             </Button>
           ))}
         </div>
       </Hero>
-      <div className="flex w-full flex-col justify-center gap-6 md:flex-row-reverse">
-        {playground.output && <OutputBlock />}
-        <ExampleUsageCode className={cn(!playground.output && "md:w-2/3")} />
+      <div className="flex w-full flex-col justify-center gap-6 md:mx-auto md:w-2/3">
+        {showOutput && <OutputBlock />}
+        <ExampleUsageCode />
       </div>
     </div>
   );

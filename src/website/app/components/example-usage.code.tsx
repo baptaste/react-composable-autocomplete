@@ -1,11 +1,11 @@
 import { html } from "@/website/app/lib/html";
 import { cn } from "@/packages/core/utils/cn";
 
-import { CodeBlock } from "../../components/code-block";
+import { CodeBlock } from "./code-block";
 
 export function ExampleUsageCode({ className }: { className?: string }) {
   return (
-    <div className={cn("flex flex-col gap-y-4 md:w-1/2", className)}>
+    <div className={cn("flex flex-col gap-y-4", className)}>
       <h4 className="text-foreground">Example usage</h4>
       <CodeBlock lang="tsx" code={exampleUsageCode} />
     </div>

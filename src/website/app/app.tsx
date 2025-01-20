@@ -1,20 +1,22 @@
-import { Header } from "./components/layout/header";
+import { Footer } from "./components/layout/footer";
 import { Layout } from "./components/layout/layout";
 import { AppTabs } from "./components/layout/tabs/app-tabs";
-import { SettingsProvider } from "./components/settings/settings.context";
+import { ThemeToggler } from "./components/theme/theme-toggler";
+import { ThemeProvider } from "./components/theme/theme.context";
 import { DemoProvider } from "./content/demo/demo.context";
 import { fetchTmdbMovies } from "./lib/tmdb-api";
 
 function App() {
   return (
-    <SettingsProvider>
+    <ThemeProvider>
       <Layout>
-        <Header />
+        <ThemeToggler />
         <DemoProvider fetchDataFn={fetchTmdbMovies}>
           <AppTabs />
         </DemoProvider>
+        <Footer />
       </Layout>
-    </SettingsProvider>
+    </ThemeProvider>
   );
 }
 

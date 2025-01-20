@@ -1,6 +1,6 @@
 export function Description() {
   return (
-    <p className="w-full text-balance text-center text-base text-muted-foreground sm:text-lg">
+    <p className="w-full text-pretty text-center text-base text-muted-foreground sm:w-2/3 sm:text-lg">
       An autocomplete compound component for React. Sync or async, built-in
       loading, error and empty states. Built with{" "}
       <a

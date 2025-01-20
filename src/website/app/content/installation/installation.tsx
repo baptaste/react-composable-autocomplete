@@ -8,7 +8,7 @@ import { InstallationTailwindAnimateCode } from "./installation-tailwind-animate
 
 export function Installation() {
   return (
-    <div className="flex w-full flex-col md:pt-24">
+    <div className="flex w-full flex-col">
       <Hero>
         <h1 className="text-3xl">Installation</h1>
       </Hero>

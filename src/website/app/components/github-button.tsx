@@ -5,7 +5,7 @@ export function GitHubButton() {
     <Button asChild variant="ghost" className="p-2">
       <a
         target="_blank"
-        href="https://github.com/baptaste/shadcn-ui-autocomplete"
+        href="https://github.com/baptaste/shadcn-basic-autocomplete"
       >
         <svg
           role="img"

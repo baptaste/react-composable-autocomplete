@@ -3,7 +3,7 @@ export const TMDB_MOVIES_API_URL = "https://api.themoviedb.org/3/search/movie";
 
 export const CODE_HIGHLIGHTER_THEME = "github-dark-default";
 
-export const STORAGE_ROOT_KEY = "shadcn-basic-autocomplete-settings--";
+export const STORAGE_ROOT_KEY = "shadcn-basic-autocomplete--";
 
 export const THEME_KEY = "theme";
 
