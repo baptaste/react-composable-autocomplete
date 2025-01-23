@@ -1,4 +1,3 @@
-import { Hero } from "../../components/hero";
 import { InstallationClickOutsideHookCode } from "./installation-click-outside-hook.code";
 import { InstallationCommandCode } from "./installation-command.code";
 import { InstallationComponentCode } from "./installation-component.code";
@@ -8,10 +7,8 @@ import { InstallationTailwindAnimateCode } from "./installation-tailwind-animate
 
 export function Installation() {
   return (
-    <div className="flex w-full flex-col">
-      <Hero>
-        <h1 className="text-3xl">Installation</h1>
-      </Hero>
+    <div className="mt-12 flex w-full flex-col">
+      <h1 className="mb-10 border-b pb-2 text-3xl">Installation</h1>
       <InstallationPrerequisiteCode />
       <InstallationTailwindAnimateCode />
       <InstallationClickOutsideHookCode />

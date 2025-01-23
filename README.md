@@ -143,23 +143,21 @@ function useIsOpen(
     "open" | "defaultOpen" | "onOpenChange"
   >,
 ) {
-  const [open, setOpen] = useState(params.defaultOpen ?? false);
+  const [_open, _setOpen] = useState(!!params.defaultOpen);
 
-  const isOpen = params.open ?? open;
-
-  useEffect(() => {
-    if (params.defaultOpen) {
-      setOpen(params.defaultOpen);
-    }
-  }, [params.defaultOpen]);
+  const isOpen = params.open ?? _open;
 
   const setIsOpen = useCallback(
     (open: boolean) => {
-      setOpen(open);
+      _setOpen(open);
       params.onOpenChange?.(open);
     },
-    [setOpen, params],
+    [_setOpen, params],
   );
+
+  useEffect(() => {
+    _setOpen(!!params.defaultOpen);
+  }, [params.defaultOpen]);
 
   return [isOpen, setIsOpen] as const;
 }
@@ -175,12 +173,6 @@ function useSearchValue(
     params.defaultValue ?? "",
   );
   const deferredValue = useDeferredValue(searchValue);
-
-  useEffect(() => {
-    if (params.defaultValue) {
-      setSearchValue(params.defaultValue);
-    }
-  }, [params.defaultValue]);
 
   const handleSearchChange = useCallback(
     (value: string) => {
@@ -200,6 +192,10 @@ function useSearchValue(
     [params, setSearchValue],
   );
 
+  useEffect(() => {
+    setSearchValue(params.defaultValue ?? "");
+  }, [params.defaultValue]);
+
   return [deferredValue, setSearchValue, handleSearchChange] as const;
 }
 
@@ -213,10 +209,7 @@ function useSelectedValue(
   const handleSelectChange = useCallback(
     (value: string | null) => {
       const item = params.results.find((item) => item.value === value);
-
-      if (!item) {
-        return;
-      }
+      if (!item) return;
 
       setSelectedValue(value);
       params.setResults?.([item]);
@@ -270,6 +263,7 @@ type AutocompleteProviderProps = PropsWithChildren<{
   open?: boolean;
   defaultOpen?: boolean;
   defaultValue?: string;
+  defaultResults?: Array<AutocompleteItemShape>;
   isLoading?: boolean;
   isError?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -277,19 +271,25 @@ type AutocompleteProviderProps = PropsWithChildren<{
   onSelectChange?: (value: string | null) => void;
 }>;
 
-function AutocompleteProvider({
-  children,
-  open,
-  defaultOpen,
-  defaultValue,
-  isLoading = false,
-  isError = false,
-  onOpenChange,
-  onSearchChange,
-  onSelectChange,
-}: AutocompleteProviderProps) {
-  const [results, setResults] = useState<Array<AutocompleteItemShape>>([]);
+function AutocompleteProvider(props: AutocompleteProviderProps) {
+  const {
+    children,
+    open,
+    defaultOpen = false,
+    defaultResults = [],
+    defaultValue = "",
+    isLoading = false,
+    isError = false,
+    onOpenChange,
+    onSearchChange,
+    onSelectChange,
+  } = props;
+
   const [isOpen, setIsOpen] = useIsOpen({ open, defaultOpen, onOpenChange });
+
+  const [results, setResults] =
+    useState<Array<AutocompleteItemShape>>(defaultResults);
+
   const [searchValue, setSearchValue, handleSearch] = useSearchValue({
     defaultValue,
     isOpen,
@@ -303,6 +303,7 @@ function AutocompleteProvider({
       onSearchChange?.(value);
     },
   });
+
   const [selectedValue, setSelectedValue, handleSelect] = useSelectedValue({
     results,
     setResults,
@@ -312,6 +313,7 @@ function AutocompleteProvider({
       onSelectChange?.(value);
     },
   });
+
   const isEmpty = useIsEmpty({ isLoading, results, searchValue });
 
   useCloseOnKeyDown({ isOpen, setIsOpen });
@@ -333,7 +335,7 @@ function AutocompleteProvider({
         setIsOpen(false);
         setSelectedValue(null);
         setSearchValue("");
-        setResults([]);
+        setResults(defaultResults);
       },
     };
   }, [
@@ -344,6 +346,7 @@ function AutocompleteProvider({
     isLoading,
     isEmpty,
     isError,
+    defaultResults,
     handleSearch,
     handleSelect,
     setIsOpen,
@@ -412,13 +415,36 @@ interface AutocompleteProps
   extends AutocompleteProviderProps,
     PropsWithChildren {
   className?: string;
+  /*
+    Indicates if the Autocomplete should be treated as a root component.
+    Meaning it will wrap the children with the AutocompleteProvider.
+    Default: true
+  */
+  root?: boolean;
 }
 
-const Autocomplete = ({ children, className, ...props }: AutocompleteProps) => (
-  <AutocompleteProvider {...props}>
-    <div className={cn("relative w-full min-w-max", className)}>{children}</div>
-  </AutocompleteProvider>
-);
+const Autocomplete = ({
+  children,
+  className,
+  root = true,
+  ...props
+}: AutocompleteProps) => {
+  if (!root) {
+    return (
+      <div className={cn("relative w-full min-w-max", className)}>
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <AutocompleteProvider {...props}>
+      <div className={cn("relative w-full min-w-max", className)}>
+        {children}
+      </div>
+    </AutocompleteProvider>
+  );
+};
 
 const AutocompleteLabel = forwardRef<
   HTMLLabelElement,

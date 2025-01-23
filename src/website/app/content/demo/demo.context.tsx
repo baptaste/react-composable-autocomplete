@@ -9,20 +9,24 @@ import {
 import type { AutocompleteItemShape } from "@/packages/core/autocomplete/autocomplete.context";
 
 import {
+  PLAYGROUND_ASYNC_MODE_KEY,
   PLAYGROUND_EMPTY_KEY,
   PLAYGROUND_ERROR_KEY,
   PLAYGROUND_LOADING_KEY,
   PLAYGROUND_OUTPUT_KEY,
   STORAGE_ROOT_KEY,
 } from "../../lib/constants";
+import { usersMock } from "../../lib/mocks";
 
 type PlaygroundOption =
   | typeof PLAYGROUND_OUTPUT_KEY
+  | typeof PLAYGROUND_ASYNC_MODE_KEY
   | typeof PLAYGROUND_ERROR_KEY
   | typeof PLAYGROUND_LOADING_KEY
   | typeof PLAYGROUND_EMPTY_KEY;
 
 type DemoContextValue = {
+  asyncMode: boolean; // playground only
   data: Array<AutocompleteItemShape>;
   isLoading: boolean;
   isError: boolean;
@@ -53,7 +57,7 @@ function getStoragePlaygroundOutputValue(): boolean {
   );
 
   if (value === null) {
-    return true;
+    return false;
   }
 
   return value === "true";
@@ -64,25 +68,36 @@ function DemoProvider({
   fetchDataFn,
 }: {
   children: React.ReactNode;
-  fetchDataFn: (search: string) => Promise<Array<AutocompleteItemShape>>;
+  fetchDataFn?: (search: string) => Promise<Array<AutocompleteItemShape>>;
 }) {
   const [data, setData] = useState<Array<AutocompleteItemShape>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isEmpty, setIsEmpty] = useState(false);
   const [showOutput, setShowOutput] = useState(getStoragePlaygroundOutputValue);
+  const [asyncMode, setAsyncMode] = useState(true);
 
   const handleSearch = useCallback(
     async (search: string) => {
+      if (!asyncMode) {
+        if (!search.length) {
+          return void setData(usersMock);
+        }
+        return void setData(
+          data.filter((item) =>
+            item.label.toLowerCase().includes(search.toLowerCase()),
+          ),
+        );
+      }
+
       if (!search.length) {
-        setData([]);
-        return;
+        return void setData([]);
       }
 
       try {
         setIsLoading(true);
-        const data = await fetchDataFn(search);
-        setData(data);
+        const data = await fetchDataFn?.(search);
+        setData(data ?? []);
       } catch (error: unknown) {
         console.error(error);
         setIsError(true);
@@ -90,7 +105,7 @@ function DemoProvider({
         setIsLoading(false);
       }
     },
-    [fetchDataFn],
+    [asyncMode, data, fetchDataFn],
   );
 
   const handleSelect = useCallback(
@@ -107,37 +122,56 @@ function DemoProvider({
   );
 
   const updatePlayground = useCallback(
-    (option: PlaygroundOption, value: boolean) => {
+    (option: PlaygroundOption, active: boolean) => {
       switch (option) {
         case "output": {
           localStorage.setItem(
             `${STORAGE_ROOT_KEY}${PLAYGROUND_OUTPUT_KEY}`,
-            value.toString(),
+            active.toString(),
           );
-          setShowOutput(value);
+          setShowOutput(active);
+          break;
+        }
+        case "async": {
+          if (!active) {
+            setAsyncMode(false);
+            setData(usersMock);
+            if (isError) setIsError(false);
+            if (isLoading) setIsLoading(false);
+            break;
+          }
+          setAsyncMode(true);
+          setData([]);
           break;
         }
         case "error": {
-          setIsError(value);
+          setIsError(active);
           if (isLoading) setIsLoading(false);
           if (isEmpty) setIsEmpty(false);
           break;
         }
         case "loading": {
-          setIsLoading(value);
+          setIsLoading(active);
           if (isError) setIsError(false);
           if (isEmpty) setIsEmpty(false);
           break;
         }
         case "empty": {
-          setIsEmpty(value);
+          setIsEmpty(active);
+          if (active) {
+            setData([]);
+          } else {
+            if (!asyncMode) {
+              setData(usersMock);
+            }
+          }
           if (isError) setIsError(false);
           if (isLoading) setIsLoading(false);
           break;
         }
       }
     },
-    [isLoading, isError, isEmpty],
+    [isLoading, isError, isEmpty, asyncMode],
   );
 
   const contextValue = useMemo<DemoContextValue>(
@@ -146,15 +180,17 @@ function DemoProvider({
       isLoading,
       isError,
       isEmpty,
+      asyncMode,
       showOutput,
       setData,
+      setAsyncMode,
       handleSearch,
       handleSelect,
       handleClear: () => {
         setIsError(false);
         setIsEmpty(false);
         setIsLoading(false);
-        setData([]);
+        setData(asyncMode ? [] : usersMock);
       },
       updatePlayground,
     }),
@@ -163,13 +199,17 @@ function DemoProvider({
       isLoading,
       isError,
       isEmpty,
+      asyncMode,
       showOutput,
       setData,
+      setAsyncMode,
       handleSearch,
       handleSelect,
       updatePlayground,
     ],
   );
+
+  console.log("Demo context", { contextValue });
 
   return (
     <DemoContext.Provider value={contextValue}>{children}</DemoContext.Provider>

@@ -1,6 +1,6 @@
 export function Footer() {
   return (
-    <footer className="flex items-center justify-center">
+    <footer className="mt-20 flex items-center justify-center">
       <p className="text-pretty text-sm text-muted-foreground">
         Built by{" "}
         <a

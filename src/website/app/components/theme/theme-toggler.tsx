@@ -17,7 +17,7 @@ export function ThemeToggler() {
   return (
     <Button
       variant="outline"
-      className="fixed right-6 top-4 z-20 py-2 text-xs capitalize sm:right-12 xl:right-40"
+      className="fixed right-6 top-4 z-20 h-7 px-3 text-xs capitalize sm:right-12 xl:right-40"
       onClick={toggleTheme}
     >
       <Icon className="mr-2 h-4 w-4 text-foreground" />

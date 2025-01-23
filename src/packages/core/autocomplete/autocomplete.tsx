@@ -37,13 +37,36 @@ interface AutocompleteProps
   extends AutocompleteProviderProps,
     PropsWithChildren {
   className?: string;
+  /*
+    Indicates if the Autocomplete should be treated as a root component.
+    Meaning it will wrap the children with the AutocompleteProvider.
+    Default: true
+  */
+  root?: boolean;
 }
 
-const Autocomplete = ({ children, className, ...props }: AutocompleteProps) => (
-  <AutocompleteProvider {...props}>
-    <div className={cn("relative w-full min-w-max", className)}>{children}</div>
-  </AutocompleteProvider>
-);
+const Autocomplete = ({
+  children,
+  className,
+  root = true,
+  ...props
+}: AutocompleteProps) => {
+  if (!root) {
+    return (
+      <div className={cn("relative w-full min-w-max", className)}>
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <AutocompleteProvider {...props}>
+      <div className={cn("relative w-full min-w-max", className)}>
+        {children}
+      </div>
+    </AutocompleteProvider>
+  );
+};
 
 const AutocompleteLabel = forwardRef<
   HTMLLabelElement,

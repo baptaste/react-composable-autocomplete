@@ -1,12 +1,12 @@
 import { html } from "@/website/app/lib/html";
 import { cn } from "@/packages/core/utils/cn";
 
-import { CodeBlock } from "./code-block";
+import { CodeBlock } from "../code-block";
 
-export function ExampleUsageCode({ className }: { className?: string }) {
+export function AsyncExampleUsageCode({ className }: { className?: string }) {
   return (
     <div className={cn("flex flex-col gap-y-4", className)}>
-      <h4 className="text-foreground">Example usage</h4>
+      <h1 className="mb-6 border-b pb-2 text-xl">Example usage (async)</h1>
       <CodeBlock lang="tsx" code={exampleUsageCode} />
     </div>
   );

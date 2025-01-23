@@ -9,6 +9,8 @@ export const THEME_KEY = "theme";
 
 export const PLAYGROUND_OUTPUT_KEY = "output";
 
+export const PLAYGROUND_ASYNC_MODE_KEY = "async";
+
 export const PLAYGROUND_ERROR_KEY = "error";
 
 export const PLAYGROUND_LOADING_KEY = "loading";
