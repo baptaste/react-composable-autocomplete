@@ -17,10 +17,10 @@ export function ThemeToggler() {
   return (
     <Button
       variant="outline"
-      className="fixed right-6 top-4 z-20 h-7 px-3 text-xs capitalize sm:right-12 xl:right-40"
+      className="group fixed right-6 top-4 z-20 h-7 px-3 text-xs capitalize sm:right-12 xl:right-40"
       onClick={toggleTheme}
     >
-      <Icon className="mr-2 h-4 w-4 text-foreground" />
+      <Icon className="mr-2 h-4 w-4 text-foreground/60 transition-colors duration-300 group-hover:text-foreground" />
       {nextValue}
     </Button>
   );

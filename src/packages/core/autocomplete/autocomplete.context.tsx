@@ -9,26 +9,85 @@ import {
   type PropsWithChildren,
 } from "react";
 
+type AutocompleteProviderProps = {
+  /*
+  Async state of the autocomplete. The filter logic is handled by an external source.
+  Sets to false to enable the built-in filtering.
+  Default: true
+  */
+  async?: boolean;
+
+  /*
+  Default open state of the autocomplete.
+  Default: false
+  */
+  defaultOpen?: boolean;
+
+  /*
+  Open state of the autocomplete (controlled).
+  Default: undefined
+  */
+  open?: boolean;
+
+  /*
+  Search value of the input (controlled).
+  Default: undefined
+  */
+  searchValue?: string;
+
+  /*
+  Loading state of the autocomplete (controlled).
+  Default: false
+  */
+  isLoading?: boolean;
+
+  /*
+  Error state of the autocomplete (controlled).
+  Default: false
+  */
+  isError?: boolean;
+
+  /*
+  Sets open state of the autocomplete (controlled).
+  Default: undefined
+   */
+  onOpenChange?: (open: boolean) => void;
+
+  /*
+  Sets search value of the autocomplete.
+  Default: undefined
+   */
+  onSearchChange?: (search: string) => void;
+
+  /*
+  Sets selected value of the autocomplete.
+  Default: undefined
+   */
+  onSelectChange?: (value: string | null) => void;
+};
+
 type AutocompleteItemShape = {
   label: string;
   value: string;
 };
 
+type AutocompleteResults = Map<string, AutocompleteItemShape>;
+
 type AutocompleteContextValue = {
+  async: boolean;
   isOpen: boolean;
   isLoading: boolean;
   isEmpty: boolean;
   isError: boolean;
-  results: Array<AutocompleteItemShape>;
+  results: AutocompleteResults;
   searchValue: string;
   selectedValue: string | null;
-
+  canSelect: (value?: string) => boolean;
+  clearStates: () => void;
   handleSearch: (value: string) => void;
   handleSelect: (value: string | null) => void;
-  clearStates: () => void;
-
-  setIsOpen?: (open: boolean) => void;
-  setResults?: (results: Array<AutocompleteItemShape>) => void;
+  setIsOpen: (open: boolean) => void;
+  setResults: (results: AutocompleteResults) => void;
 };
 
 const AutocompleteContext = createContext<AutocompleteContextValue | null>(
@@ -59,15 +118,14 @@ function useIsOpen(
 
   const setIsOpen = useCallback(
     (open: boolean) => {
-      _setOpen(open);
-      params.onOpenChange?.(open);
+      if (params.onOpenChange) {
+        params.onOpenChange(open);
+      } else {
+        _setOpen(open);
+      }
     },
     [_setOpen, params],
   );
-
-  useEffect(() => {
-    _setOpen(!!params.defaultOpen);
-  }, [params.defaultOpen]);
 
   return [isOpen, setIsOpen] as const;
 }
@@ -77,36 +135,33 @@ function useSearchValue(
     AutocompleteContextValue,
     "isOpen" | "setIsOpen" | "results" | "setResults"
   > &
-    Pick<AutocompleteProviderProps, "defaultValue" | "onSearchChange">,
+    Pick<AutocompleteProviderProps, "searchValue" | "onSearchChange">,
 ) {
-  const [searchValue, setSearchValue] = useState<string>(
-    params.defaultValue ?? "",
-  );
-  const deferredValue = useDeferredValue(searchValue);
+  const [_searchValue, _setSearchValue] = useState<string>("");
+  const deferredValue = useDeferredValue(params.searchValue ?? _searchValue);
 
   const handleSearchChange = useCallback(
     (value: string) => {
-      if (!value.length && params.results.length) {
-        params.setResults?.([]);
+      if (!value.length && params.results.size) {
+        params.setResults(new Map());
       }
 
       if (!params.isOpen && value.length) {
-        params.setIsOpen?.(true);
+        params.setIsOpen(true);
       } else if (params.isOpen && !value.length) {
-        params.setIsOpen?.(false);
+        params.setIsOpen(false);
       }
 
-      setSearchValue(value);
-      params.onSearchChange?.(value);
+      if (params.onSearchChange) {
+        params.onSearchChange(value);
+      } else {
+        _setSearchValue(value);
+      }
     },
-    [params, setSearchValue],
+    [params, _setSearchValue],
   );
 
-  useEffect(() => {
-    setSearchValue(params.defaultValue ?? "");
-  }, [params.defaultValue]);
-
-  return [deferredValue, setSearchValue, handleSearchChange] as const;
+  return [deferredValue, _setSearchValue, handleSearchChange] as const;
 }
 
 function useSelectedValue(
@@ -114,27 +169,42 @@ function useSelectedValue(
     onSelectChange?: (value: string | null) => void;
   },
 ) {
+  const { results, setResults, onSelectChange } = params;
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
 
-  const handleSelectChange = useCallback(
+  const handleSelect = useCallback(
     (value: string | null) => {
-      const item = params.results.find((item) => item.value === value);
-      if (!item) return;
+      if (!value || !results.has(value)) return;
 
       setSelectedValue(value);
-      params.setResults?.([item]);
-      params.onSelectChange?.(value);
+      onSelectChange?.(value);
+
+      const item = results.get(value);
+
+      if (item) {
+        setResults(new Map([[value, item]]));
+      }
     },
-    [params, setSelectedValue],
+    [results, setResults, onSelectChange, setSelectedValue],
   );
 
-  return [selectedValue, setSelectedValue, handleSelectChange] as const;
+  const canSelect = useCallback(
+    (value?: string) => !!value && results.has(value),
+    [results],
+  );
+
+  return {
+    selectedValue,
+    setSelectedValue,
+    handleSelect,
+    canSelect,
+  };
 }
 
 function useIsEmpty(
   params: Pick<
     AutocompleteContextValue,
-    "isLoading" | "results" | "searchValue"
+    "isLoading" | "searchValue" | "results"
   >,
 ): boolean {
   const { isLoading, results, searchValue } = params;
@@ -143,7 +213,7 @@ function useIsEmpty(
     if (isLoading) {
       return false;
     }
-    return searchValue.length > 0 && results.length === 0;
+    return searchValue.length > 0 && results.size === 0;
   }, [isLoading, searchValue, results]);
 
   return isEmpty;
@@ -157,7 +227,7 @@ function useCloseOnKeyDown(
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isOpen && ["Enter", "Escape"].includes(e.key)) {
-        setIsOpen?.(false);
+        setIsOpen(false);
       }
     };
 
@@ -169,25 +239,15 @@ function useCloseOnKeyDown(
   }, [isOpen, setIsOpen]);
 }
 
-type AutocompleteProviderProps = PropsWithChildren<{
-  open?: boolean;
-  defaultOpen?: boolean;
-  defaultValue?: string;
-  defaultResults?: Array<AutocompleteItemShape>;
-  isLoading?: boolean;
-  isError?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  onSearchChange?: (search: string) => void;
-  onSelectChange?: (value: string | null) => void;
-}>;
-
-function AutocompleteProvider(props: AutocompleteProviderProps) {
+function AutocompleteProvider(
+  props: PropsWithChildren<AutocompleteProviderProps>,
+) {
   const {
+    async = true,
     children,
     open,
     defaultOpen = false,
-    defaultResults = [],
-    defaultValue = "",
+    searchValue: searchValueProp,
     isLoading = false,
     isError = false,
     onOpenChange,
@@ -195,34 +255,30 @@ function AutocompleteProvider(props: AutocompleteProviderProps) {
     onSelectChange,
   } = props;
 
+  const [results, setResults] = useState<AutocompleteResults>(new Map());
+
   const [isOpen, setIsOpen] = useIsOpen({ open, defaultOpen, onOpenChange });
 
-  const [results, setResults] =
-    useState<Array<AutocompleteItemShape>>(defaultResults);
-
   const [searchValue, setSearchValue, handleSearch] = useSearchValue({
-    defaultValue,
+    searchValue: searchValueProp,
     isOpen,
     setIsOpen,
     results,
     setResults,
-    onSearchChange: (value) => {
-      if (selectedValue) {
-        setSelectedValue(null);
-      }
-      onSearchChange?.(value);
-    },
+    onSearchChange,
   });
 
-  const [selectedValue, setSelectedValue, handleSelect] = useSelectedValue({
-    results,
-    setResults,
-    onSelectChange: (value) => {
-      setIsOpen(false);
-      setSearchValue("");
-      onSelectChange?.(value);
-    },
-  });
+  const { selectedValue, setSelectedValue, handleSelect, canSelect } =
+    useSelectedValue({
+      results,
+      setResults,
+      onSelectChange: (value) => {
+        setIsOpen(false);
+        setSearchValue("");
+        onSearchChange?.("");
+        onSelectChange?.(value);
+      },
+    });
 
   const isEmpty = useIsEmpty({ isLoading, results, searchValue });
 
@@ -230,42 +286,45 @@ function AutocompleteProvider(props: AutocompleteProviderProps) {
 
   const contextValue = useMemo<AutocompleteContextValue>(() => {
     return {
+      async,
       isOpen,
-      results,
-      searchValue,
-      selectedValue,
       isLoading,
       isEmpty,
       isError,
+      defaultOpen,
+      results,
+      searchValue,
+      selectedValue,
       handleSearch,
       handleSelect,
       setResults,
       setIsOpen,
+      canSelect,
       clearStates: () => {
         setIsOpen(false);
         setSelectedValue(null);
         setSearchValue("");
-        setResults(defaultResults);
+        setResults(new Map());
       },
     };
   }, [
+    async,
     isOpen,
-    results,
-    searchValue,
-    selectedValue,
     isLoading,
     isEmpty,
     isError,
-    defaultResults,
+    defaultOpen,
+    results,
+    searchValue,
+    selectedValue,
     handleSearch,
     handleSelect,
+    canSelect,
     setIsOpen,
     setSelectedValue,
     setSearchValue,
     setResults,
   ]);
-
-  console.log("Autocomplete context", { contextValue });
 
   return (
     <AutocompleteContext.Provider value={contextValue}>

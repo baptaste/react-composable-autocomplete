@@ -1,11 +1,11 @@
 import {
   Autocomplete,
   AutocompleteClear,
-  AutocompleteContent,
   AutocompleteEmpty,
   AutocompleteError,
   AutocompleteInput,
   AutocompleteItem,
+  AutocompleteLabel,
   AutocompleteList,
   AutocompleteLoading,
 } from "@/packages/core/autocomplete/autocomplete";
@@ -17,7 +17,7 @@ export function AsyncPlayground() {
     data,
     isLoading,
     isError,
-    isEmpty,
+    playground,
     handleClear,
     handleSearch,
     handleSelect,
@@ -25,36 +25,39 @@ export function AsyncPlayground() {
 
   return (
     <Autocomplete
-      className="md:max-w-[350px]"
+      className="md:w-[350px]"
       isLoading={isLoading}
       isError={isError}
       onSelectChange={handleSelect}
-      // simulate empty state
-      defaultValue={isEmpty ? "asdfasdfasdf" : undefined}
-      defaultOpen={isEmpty}
+      // Simulate empty state
+      open={!!playground.empty || undefined}
+      searchValue={playground.empty === true ? "asdfasdf" : undefined}
     >
-      <AutocompleteContent>
-        <AutocompleteInput
-          placeholder="Search movies..."
-          onSearchChange={handleSearch}
-        >
-          <AutocompleteClear onClear={handleClear} />
-        </AutocompleteInput>
-        <AutocompleteList className="z-50">
-          {data.map((item) => (
-            <AutocompleteItem
-              key={item.value}
-              value={item.value}
-              onSelectChange={handleSelect}
-            >
-              {item.label}
-            </AutocompleteItem>
-          ))}
-          <AutocompleteLoading />
-          <AutocompleteEmpty />
-        </AutocompleteList>
-        <AutocompleteError />
-      </AutocompleteContent>
+      {!!playground.label && (
+        <AutocompleteLabel>Search for a movie</AutocompleteLabel>
+      )}
+      <AutocompleteInput
+        placeholder="Search movies..."
+        onSearchChange={handleSearch}
+      >
+        <AutocompleteClear onClear={handleClear} />
+      </AutocompleteInput>
+      <AutocompleteList>
+        {data.map((item) => (
+          <AutocompleteItem
+            key={item.value}
+            value={item.value}
+            onSelectChange={handleSelect}
+          >
+            {item.label}
+          </AutocompleteItem>
+        ))}
+        <AutocompleteLoading />
+        <AutocompleteEmpty>
+          No movies found. Try searching for something else.
+        </AutocompleteEmpty>
+      </AutocompleteList>
+      <AutocompleteError />
     </Autocomplete>
   );
 }

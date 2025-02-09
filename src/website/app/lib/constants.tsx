@@ -16,3 +16,5 @@ export const PLAYGROUND_ERROR_KEY = "error";
 export const PLAYGROUND_LOADING_KEY = "loading";
 
 export const PLAYGROUND_EMPTY_KEY = "empty";
+
+export const PLAYGROUND_LABEL_KEY = "label";

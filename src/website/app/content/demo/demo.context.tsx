@@ -2,8 +2,11 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
+  type ReactNode,
 } from "react";
 
 import type { AutocompleteItemShape } from "@/packages/core/autocomplete/autocomplete.context";
@@ -12,31 +15,34 @@ import {
   PLAYGROUND_ASYNC_MODE_KEY,
   PLAYGROUND_EMPTY_KEY,
   PLAYGROUND_ERROR_KEY,
+  PLAYGROUND_LABEL_KEY,
   PLAYGROUND_LOADING_KEY,
   PLAYGROUND_OUTPUT_KEY,
   STORAGE_ROOT_KEY,
 } from "../../lib/constants";
 import { usersMock } from "../../lib/mocks";
+import { fetchTmdbMovies } from "../../lib/tmdb-api";
+import { wait } from "../../lib/wait";
 
 type PlaygroundOption =
   | typeof PLAYGROUND_OUTPUT_KEY
   | typeof PLAYGROUND_ASYNC_MODE_KEY
   | typeof PLAYGROUND_ERROR_KEY
   | typeof PLAYGROUND_LOADING_KEY
-  | typeof PLAYGROUND_EMPTY_KEY;
+  | typeof PLAYGROUND_EMPTY_KEY
+  | typeof PLAYGROUND_LABEL_KEY;
 
 type DemoContextValue = {
-  asyncMode: boolean; // playground only
   data: Array<AutocompleteItemShape>;
   isLoading: boolean;
   isError: boolean;
-  isEmpty: boolean; // playground only
-  showOutput: boolean; // playground only
   setData: (data: Array<AutocompleteItemShape>) => void;
-  updatePlayground: (option: PlaygroundOption, value: boolean) => void; // playground only
   handleSearch: (search: string) => void;
   handleSelect: (value: string | null) => void;
   handleClear: () => void;
+
+  playground: Record<PlaygroundOption, boolean | "disabled">;
+  updatePlayground: (option: PlaygroundOption, value: boolean) => void;
 };
 
 const DemoContext = createContext<DemoContextValue | null>(null);
@@ -63,19 +69,32 @@ function getStoragePlaygroundOutputValue(): boolean {
   return value === "true";
 }
 
-function DemoProvider({
-  children,
-  fetchDataFn,
-}: {
-  children: React.ReactNode;
-  fetchDataFn?: (search: string) => Promise<Array<AutocompleteItemShape>>;
-}) {
+function DemoProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<Array<AutocompleteItemShape>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isEmpty, setIsEmpty] = useState(false);
+
   const [showOutput, setShowOutput] = useState(getStoragePlaygroundOutputValue);
+  const [showLabel, setShowLabel] = useState(false);
   const [asyncMode, setAsyncMode] = useState(true);
+
+  const hasFakedLoading = useRef(false);
+
+  const fakeLoader = useCallback(async () => {
+    setIsLoading(true);
+    await wait(1500);
+    setIsLoading(false);
+    hasFakedLoading.current = true;
+  }, [setIsLoading, hasFakedLoading]);
+
+  useEffect(() => {
+    if (!asyncMode) return;
+
+    if (hasFakedLoading.current === false) {
+      fakeLoader();
+    }
+  }, [asyncMode, fakeLoader]);
 
   const handleSearch = useCallback(
     async (search: string) => {
@@ -96,7 +115,7 @@ function DemoProvider({
 
       try {
         setIsLoading(true);
-        const data = await fetchDataFn?.(search);
+        const data = await fetchTmdbMovies(search);
         setData(data ?? []);
       } catch (error: unknown) {
         console.error(error);
@@ -105,7 +124,7 @@ function DemoProvider({
         setIsLoading(false);
       }
     },
-    [asyncMode, data, fetchDataFn],
+    [asyncMode, data],
   );
 
   const handleSelect = useCallback(
@@ -120,6 +139,27 @@ function DemoProvider({
     },
     [data],
   );
+
+  const playground: Record<PlaygroundOption, boolean | "disabled"> =
+    useMemo(() => {
+      return asyncMode
+        ? {
+            output: showOutput,
+            async: true,
+            label: showLabel,
+            empty: isEmpty,
+            error: isError,
+            loading: isLoading,
+          }
+        : {
+            output: showOutput,
+            async: false,
+            label: showLabel,
+            empty: isEmpty,
+            error: "disabled",
+            loading: "disabled",
+          };
+    }, [asyncMode, showOutput, showLabel, isEmpty, isError, isLoading]);
 
   const updatePlayground = useCallback(
     (option: PlaygroundOption, active: boolean) => {
@@ -169,6 +209,10 @@ function DemoProvider({
           if (isLoading) setIsLoading(false);
           break;
         }
+        case "label": {
+          setShowLabel(active);
+          break;
+        }
       }
     },
     [isLoading, isError, isEmpty, asyncMode],
@@ -180,8 +224,7 @@ function DemoProvider({
       isLoading,
       isError,
       isEmpty,
-      asyncMode,
-      showOutput,
+      playground,
       setData,
       setAsyncMode,
       handleSearch,
@@ -195,12 +238,12 @@ function DemoProvider({
       updatePlayground,
     }),
     [
+      asyncMode,
       data,
       isLoading,
       isError,
       isEmpty,
-      asyncMode,
-      showOutput,
+      playground,
       setData,
       setAsyncMode,
       handleSearch,
@@ -208,8 +251,6 @@ function DemoProvider({
       updatePlayground,
     ],
   );
-
-  console.log("Demo context", { contextValue });
 
   return (
     <DemoContext.Provider value={contextValue}>{children}</DemoContext.Provider>

@@ -23,17 +23,17 @@ export function InstallationComponentCode() {
 }
 
 const componentInstallationCode =
-html`   import {
-     forwardRef,
-     useCallback,
-     useEffect,
-     useImperativeHandle,
-     useMemo,
-     useRef,
-     type ComponentPropsWithoutRef,
-     type KeyboardEvent,
-    type MouseEvent,
-    type PropsWithChildren,
+html`  import {
+    forwardRef,
+    Fragment,
+    useCallback,
+    useEffect,
+    useImperativeHandle,
+    useRef,
+    type ComponentPropsWithoutRef,
+    type KeyboardEvent,
+   type MouseEvent,
+   type PropsWithChildren,
   } from "react";
   // Replace with your own icon library
   import { XIcon } from "lucide-react";
@@ -59,12 +59,11 @@ html`   import {
   } from "./autocomplete.context";
 
   interface AutocompleteProps
-    extends AutocompleteProviderProps,
-      PropsWithChildren {
+    extends PropsWithChildren<AutocompleteProviderProps> {
     className?: string;
     /*
-      Indicates if the Autocomplete should be treated as a root component.
-      Meaning it will wrap the children with the AutocompleteProvider.
+      Indicates if the autocomplete should be treated as a root component.
+      If true, it will wrap the children with the AutocompleteProvider.
       Default: true
     */
     root?: boolean;
@@ -76,48 +75,57 @@ html`   import {
     root = true,
     ...props
   }: AutocompleteProps) => {
-    if (!root) {
-      return (
-        <div className={cn("relative w-full min-w-max", className)}>
-          {children}
-        </div>
-      );
-    }
+    const Root = root ? AutocompleteProvider : Fragment;
 
     return (
-      <AutocompleteProvider {...props}>
-        <div className={cn("relative w-full min-w-max", className)}>
-          {children}
+      <Root {...(root ? props : {})}>
+        <div className={cn("relative w-full", className)}>
+          <AutocompleteContent>{children}</AutocompleteContent>
         </div>
-      </AutocompleteProvider>
+      </Root>
     );
   };
 
   const AutocompleteLabel = forwardRef<
     HTMLLabelElement,
     ComponentPropsWithoutRef<typeof Label>
-  >(({ id, className, ...props }, ref) => (
-    <Label
-      ref={ref}
-      htmlFor={id ? String(id) : undefined}
-      className={cn("mb-1.5 block w-fit text-foreground", className)}
-      {...props}
-    />
-  ));
+  >(({ id, className, ...props }, ref) => {
+    const { isError } = useAutocomplete();
+
+    return (
+      <Label
+        ref={ref}
+        data-autocomplete-label=""
+        htmlFor={id ? String(id) : undefined}
+        className={cn(
+          "mb-2 block w-fit text-foreground",
+          isError && "text-destructive",
+          className,
+        )}
+        {...props}
+      />
+    );
+  });
 
   const AutocompleteContent = forwardRef<
     HTMLDivElement,
     ComponentPropsWithoutRef<typeof Command>
   >(({ children, className, ...props }, ref) => {
     const contentRef = useRef<HTMLDivElement>(null);
-    const { setIsOpen } = useAutocomplete();
+    const { isOpen, setIsOpen } = useAutocomplete();
 
     useImperativeHandle(ref, () => contentRef.current as HTMLDivElement);
-    useOnClickOutside(contentRef, () => setIsOpen?.(false));
+
+    useOnClickOutside(contentRef, () => {
+      if (isOpen) {
+        setIsOpen(false);
+      }
+    });
 
     return (
       <Command
         ref={contentRef}
+        data-autocomplete-content=""
         shouldFilter={false}
         className={cn("duration-50 w-full shadow-none", className)}
         {...props}
@@ -129,7 +137,11 @@ html`   import {
 
   const AutocompleteInput = forwardRef<
     HTMLInputElement,
-    ComponentPropsWithoutRef<typeof CommandInput> & {
+    Omit<
+      ComponentPropsWithoutRef<typeof CommandInput>,
+      "onValueChange" | "defaultValue" | "value"
+    > & {
+      searchValue?: string;
       onSearchChange?: (search: string) => void;
     }
   >(
@@ -137,6 +149,7 @@ html`   import {
       {
         children,
         className,
+        searchValue: searchValueProp,
         id,
         placeholder = "Type to search...",
         onSearchChange,
@@ -148,11 +161,18 @@ html`   import {
         results,
         isError,
         isLoading,
-        searchValue,
+        searchValue: searchValueCtx,
         selectedValue,
         handleSearch,
         handleSelect,
       } = useAutocomplete();
+
+      const searchValue = searchValueProp ?? searchValueCtx;
+
+      const inputValue =
+        searchValue.length > 0
+          ? searchValue
+          : ((selectedValue && results.get(selectedValue)?.label) ?? "");
 
       const handleSearchChange = (search: string) => {
         handleSearch(search);
@@ -161,15 +181,17 @@ html`   import {
 
       const handleTabKeyPress = useCallback(
         (e: KeyboardEvent<HTMLInputElement>) => {
-          if (e.key === "Tab") {
-            handleSelect(results[0]?.value);
-          }
+          if (e.key !== "Tab") return;
+
+          const firstResultItem = results.values().next().value;
+          handleSelect(firstResultItem?.value ?? null);
         },
-        [handleSelect, results],
+        [results, handleSelect],
       );
 
       return (
         <div
+          data-autocomplete-input=""
           className={cn(
             "relative flex items-center rounded-md border border-input transition-colors focus-within:outline-none [&_*:is(div)]:w-full [&_*:is(div)]:border-b-0",
             isError ? "border-destructive" : "focus-within:border-foreground",
@@ -178,18 +200,13 @@ html`   import {
         >
           <CommandInput
             ref={ref}
+            {...props}
             id={id ? String(id) : undefined}
             className="pr-8 text-foreground"
             placeholder={isLoading ? "Loading..." : placeholder}
+            value={inputValue}
             onValueChange={handleSearchChange}
             onKeyDown={handleTabKeyPress}
-            value={
-              searchValue.length > 0
-                ? searchValue
-                : (results.find((item) => item.value === selectedValue)?.label ??
-                  "")
-            }
-            {...props}
           />
           {children}
         </div>
@@ -216,6 +233,7 @@ html`   import {
     return (
       <Button
         ref={ref}
+        data-autocomplete-clear=""
         variant="ghost"
         onClick={handleClear}
         className={cn(
@@ -237,43 +255,46 @@ html`   import {
     ComponentPropsWithoutRef<typeof CommandGroup>
   >(({ children, className, ...props }, ref) => {
     const listRef = useRef<HTMLDivElement>(null);
-    const { isOpen, isError, isLoading, searchValue, setResults } =
+
+    const { async, isOpen, isError, isLoading, searchValue, setResults } =
       useAutocomplete();
 
-    const state = useMemo<string>(() => {
-      if (isError) {
-        return "closed";
-      }
-      return isOpen || isLoading ? "open" : "closed";
-    }, [isError, isOpen, isLoading]);
+    const state = isError ? "closed" : isOpen || isLoading ? "open" : "closed";
 
     useEffect(() => {
-      if (!isLoading && isOpen) {
-        const nodeItems =
-          listRef?.current?.querySelectorAll("[data-autocomplete-item]") ?? [];
+      if (isLoading || !isOpen || !listRef?.current) return;
 
-        const results = Array.from(nodeItems).map((item) => ({
-          value: (item as HTMLElement).dataset.value ?? "",
-          label: (item as HTMLElement).textContent ?? "",
-        }));
+      const nodeResults = Array.from(
+        listRef.current.querySelectorAll("[data-autocomplete-item]"),
+      ).map((item) => ({
+        value: (item as HTMLElement).dataset.value ?? "",
+        label: (item as HTMLElement).textContent ?? "",
+      }));
 
-        const filteredResults = results.filter((option) =>
-          option.label.toLowerCase().includes(searchValue.toLowerCase()),
+      if (!async) {
+        // Manual filter results based on search value
+        const filteredResults = nodeResults.filter((item) =>
+          item.label.toLowerCase().includes(searchValue.toLowerCase()),
         );
 
-        setResults?.(filteredResults);
+        return void setResults(
+          new Map(filteredResults.map((item) => [item.value, item])),
+        );
       }
-    }, [children, isOpen, isLoading, searchValue, setResults]);
+
+      setResults(new Map(nodeResults.map((item) => [item.value, item])));
+    }, [children, async, isOpen, isLoading, searchValue, setResults]);
 
     return (
       <CommandGroup
         ref={ref}
+        data-autocomplete-list=""
         data-state={state}
         className={cn(
-          "z-10 mt-1.5 overflow-y-hidden",
-          "absolute left-0 right-0 top-full",
+          "z-10 mt-1.5",
+          "absolute left-0 right-0 top-full w-full",
           "rounded-md border bg-background",
-          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[state=open]:motion-safe:animate-in data-[state=closed]:motion-safe:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           "data-[state=closed]:hidden",
@@ -290,18 +311,29 @@ html`   import {
 
   const AutocompleteItem = forwardRef<
     HTMLDivElement,
-    ComponentPropsWithoutRef<typeof CommandItem> & {
+    Omit<ComponentPropsWithoutRef<typeof CommandItem>, "onSelect"> & {
       onSelectChange?: (value: string) => void;
     }
   >(({ children, className, value, onSelectChange, ...props }, ref) => {
-    const { isLoading, handleSelect } = useAutocomplete();
+    const {
+      async,
+      isLoading,
+      isOpen,
+      isEmpty,
+      isError,
+      canSelect,
+      handleSelect,
+    } = useAutocomplete();
+
+    // Sync items state only
+    const hidden = !async && isOpen && !canSelect(value);
 
     const handleSelectChange = (value: string) => {
       handleSelect(value);
       onSelectChange?.(value);
     };
 
-    if (isLoading) {
+    if (isLoading || (!async && (isEmpty || isError))) {
       return null;
     }
 
@@ -310,8 +342,8 @@ html`   import {
         ref={ref}
         data-autocomplete-item=""
         value={value?.toString()}
-        className={cn("cursor-pointer", className)}
         onSelect={handleSelectChange}
+        className={cn("cursor-pointer px-3 py-2", { hidden }, className)}
         {...props}
       >
         {children}
@@ -319,15 +351,32 @@ html`   import {
     );
   });
 
+  const AutocompleteEmpty = forwardRef<
+    HTMLDivElement,
+    ComponentPropsWithoutRef<typeof CommandEmpty>
+  >(({ children, className, ...props }, ref) => {
+    const { isEmpty } = useAutocomplete();
+
+    if (!isEmpty) return null;
+
+    return (
+      <CommandEmpty
+        ref={ref}
+        {...props}
+        className={cn("text-pretty px-3 py-4 text-center text-sm", className)}
+      >
+        {children ?? "No results found."}
+      </CommandEmpty>
+    );
+  });
+
   const AutocompleteLoading = forwardRef<
     HTMLUListElement,
     { className?: string; placeholders?: number }
   >(({ className, placeholders = 3, ...props }, ref) => {
-    const { isLoading, isEmpty } = useAutocomplete();
+    const { async, isLoading, isEmpty } = useAutocomplete();
 
-    if (!isLoading || isEmpty) {
-      return null;
-    }
+    if (!async || !isLoading || isEmpty) return null;
 
     return (
       <ul ref={ref} className="space-y-1.5" {...props}>
@@ -335,7 +384,7 @@ html`   import {
           <li
             key={index}
             className={cn(
-              "h-8 animate-pulse rounded-md bg-accent duration-1000",
+              "duration-800 h-9 rounded-md bg-accent motion-safe:animate-pulse",
               className,
             )}
           />
@@ -344,38 +393,20 @@ html`   import {
     );
   });
 
-  const AutocompleteEmpty = forwardRef<
-    HTMLDivElement,
-    ComponentPropsWithoutRef<typeof CommandEmpty>
-  >(({ children, ...props }, ref) => {
-    const { isEmpty } = useAutocomplete();
-
-    if (!isEmpty) {
-      return null;
-    }
-
-    return (
-      <CommandEmpty ref={ref} {...props}>
-        {children ?? "No results found."}
-      </CommandEmpty>
-    );
-  });
-
   const AutocompleteError = forwardRef<
     HTMLParagraphElement,
     ComponentPropsWithoutRef<"p">
   >(({ children, className, ...props }, ref) => {
-    const { isError } = useAutocomplete();
+    const { async, isError } = useAutocomplete();
 
-    if (!isError) {
-      return null;
-    }
+    if (!async || !isError) return null;
 
     return (
       <p
         ref={ref}
+        data-autocomplete-error=""
         {...props}
-        className={cn("mt-1 text-xs text-destructive", className)}
+        className={cn("mt-1 text-sm text-destructive", className)}
       >
         {children ?? "An error occurred. Please try again later."}
       </p>
@@ -386,12 +417,11 @@ html`   import {
     type AutocompleteProps,
     Autocomplete,
     AutocompleteLabel,
-    AutocompleteContent,
     AutocompleteInput,
     AutocompleteList,
     AutocompleteItem,
     AutocompleteClear,
-    AutocompleteLoading,
     AutocompleteEmpty,
+    AutocompleteLoading,
     AutocompleteError,
   };`;

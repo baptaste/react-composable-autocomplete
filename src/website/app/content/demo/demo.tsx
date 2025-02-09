@@ -1,39 +1,17 @@
-import { Button } from "@/packages/core/ui/button";
 import { cn } from "@/packages/core/utils/cn";
 
+import { CodeBlock } from "../../components/code-block";
 import { AsyncExampleUsageCode } from "../../components/example-usage/async-example-usage.code";
 import { SyncExampleUsageCode } from "../../components/example-usage/sync-example-usage.code";
 import { Hero, HeroDescription, HeroTitle } from "../../components/hero";
-import { OutputBlock } from "../../components/output-block";
 import { AsyncPlayground } from "../../components/playground/async-playground";
+import { PlaygroundOptions } from "../../components/playground/playground-options";
 import { SyncPlayground } from "../../components/playground/sync-playground";
 import { Installation } from "../installation/installation";
-import { useDemo, type PlaygroundOption } from "./demo.context";
+import { useDemo } from "./demo.context";
 
 export function Demo() {
-  const {
-    data,
-    isError,
-    isLoading,
-    isEmpty,
-    showOutput,
-    asyncMode,
-    updatePlayground,
-  } = useDemo();
-
-  const playgroundState = asyncMode
-    ? {
-        output: showOutput,
-        async: true,
-        error: isError,
-        loading: isLoading,
-        empty: isEmpty,
-      }
-    : {
-        output: showOutput,
-        async: false,
-        empty: isEmpty,
-      };
+  const { data, playground } = useDemo();
 
   return (
     <div className="flex w-full flex-col gap-y-8">
@@ -41,44 +19,46 @@ export function Demo() {
         <HeroTitle />
 
         <div
-          className={cn("flex w-full justify-center", !asyncMode && "hidden")}
+          className={cn(
+            "flex w-full justify-center",
+            !playground.async && "hidden",
+          )}
         >
           <AsyncPlayground />
         </div>
         <div
-          className={cn("flex w-full justify-center", asyncMode && "hidden")}
+          className={cn(
+            "flex w-full justify-center",
+            playground.async && "hidden",
+          )}
         >
           <SyncPlayground />
         </div>
 
-        {showOutput && (
-          <div className="mt-8 min-h-11 w-full md:w-auto">
-            <OutputBlock data={data} />
+        {playground.output && (
+          <div className="!mt-4 min-h-11 w-full md:w-auto">
+            <CodeBlock
+              lang="json"
+              code={JSON.stringify(data, null, 2)}
+              className={cn(
+                "max-h-[200px] md:min-w-[350px] md:max-w-[600px]",
+                data.length > 0 && "w-[600px]",
+              )}
+              lineNumbers={false}
+              copy={false}
+            />
           </div>
         )}
 
         <HeroDescription />
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          {Object.entries(playgroundState).map(([option, active]) => (
-            <Button
-              key={option}
-              variant={active ? "default" : "outline"}
-              className={cn("min-w-20 rounded-full text-xs capitalize")}
-              onClick={() => {
-                updatePlayground(option as PlaygroundOption, !active);
-              }}
-            >
-              {option}
-            </Button>
-          ))}
-        </div>
+        <PlaygroundOptions />
       </Hero>
 
-      <div className={cn("block", !asyncMode && "hidden")}>
+      <div className={cn("block", !playground.async && "hidden")}>
         <AsyncExampleUsageCode />
       </div>
-      <div className={cn("block", asyncMode && "hidden")}>
+      <div className={cn("block", playground.async && "hidden")}>
         <SyncExampleUsageCode />
       </div>
 

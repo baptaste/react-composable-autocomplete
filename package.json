@@ -1,8 +1,11 @@
 {
-  "name": "shadcn-ui-autocomplete",
+  "name": "react-composable-autocomplete",
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "author": "Baptiste Champbenoit <https://github.com/baptaste>",
+  "description": "A composable autocomplete component for React",
+  "homepage": "https://react-composable-autocomplete.vercel.app/",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

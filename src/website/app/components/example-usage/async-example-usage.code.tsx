@@ -14,24 +14,24 @@ export function AsyncExampleUsageCode({ className }: { className?: string }) {
 
 const exampleUsageCode =
 html`  <Autocomplete isLoading={isLoading} isError={isError}>
-    <AutocompleteContent>
-      <AutocompleteInput onSearchChange={handleSearch}>
-        <AutocompleteClear onClear={handleClear} />
-      </AutocompleteInput>
-      <AutocompleteList>
-        {data.map((item) => (
-          <AutocompleteItem
-            key={item.value}
-           value={item.value}
-           onSelectChange={handleSelect}
-          >
-            {item.label}
-          </AutocompleteItem>
-        ))}
-        <AutocompleteLoading />
-        <AutocompleteEmpty />
-      </AutocompleteList>
-      <AutocompleteError />
-    </AutocompleteContent>
+    <AutocompleteInput onSearchChange={handleSearch}>
+      <AutocompleteClear onClear={handleClear} />
+    </AutocompleteInput>
+    <AutocompleteList>
+      {movies.map((movie) => (
+        <AutocompleteItem
+          key={movie.value}
+          value={movie.value}
+         onSelectChange={handleSelect}
+        >
+          {movie.label}
+        </AutocompleteItem>
+      ))}
+      <AutocompleteLoading />
+      <AutocompleteEmpty>
+        No movies found. Try searching for something else.
+      </AutocompleteEmpty>
+    </AutocompleteList>
+    <AutocompleteError />
   </Autocomplete>`;
 

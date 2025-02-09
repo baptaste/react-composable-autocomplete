@@ -13,23 +13,21 @@ export function SyncExampleUsageCode({ className }: { className?: string }) {
 }
 
 const exampleUsageCode =
-html`  <Autocomplete>
-    <AutocompleteContent>
-      <AutocompleteInput onSearchChange={handleSearch}>
-        <AutocompleteClear onClear={handleClear} />
-      </AutocompleteInput>
-      <AutocompleteList>
-        {data.map((item) => (
-          <AutocompleteItem
-            key={item.value}
-           value={item.value}
-           onSelectChange={handleSelect}
-          >
-            {item.label}
-          </AutocompleteItem>
-        ))}
-        <AutocompleteEmpty />
-      </AutocompleteList>
-    </AutocompleteContent>
+html`  <Autocomplete async={false}>
+    <AutocompleteInput onSearchChange={handleSearch}>
+      <AutocompleteClear onClear={handleClear} />
+    </AutocompleteInput>
+    <AutocompleteList>
+      {users.map((user) => (
+        <AutocompleteItem
+          key={user.value}
+          value={user.value}
+         onSelectChange={handleSelect}
+        >
+          {user.label}
+        </AutocompleteItem>
+      ))}
+      <AutocompleteEmpty>No users found.</AutocompleteEmpty>
+    </AutocompleteList>
   </Autocomplete>`;
 
