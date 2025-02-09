@@ -1,4 +1,4 @@
-# Shadcn Basic Autocomplete
+# React Composable Autocomplete
 
 A composable autocomplete component for React. Sync or async, built-in loading, error and empty states. Customizable, accessible, open source.
 
@@ -112,4 +112,4 @@ type AutocompleteProviderProps = {
 
 ## Installation
 
-Visit [shadcn-basic-autocomplete.vercel.app](https://shadcn-basic-autocomplete.vercel.app/) for full installation.
+Visit [react-composable-autocomplete.vercel.app](https://react-composable-autocomplete.vercel.app/) for full installation.

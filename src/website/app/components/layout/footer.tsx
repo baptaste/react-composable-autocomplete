@@ -13,7 +13,7 @@ export function Footer() {
         . Source code on{" "}
         <a
           target="_blank"
-          href="https://github.com/baptaste/shadcn-basic-autocomplete"
+          href="https://github.com/baptaste/react-composable-autocomplete"
           className="text-foreground underline transition-colors hover:text-muted-foreground"
         >
           GitHub

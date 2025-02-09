@@ -3,7 +3,6 @@ import { PropsWithChildren, useState } from "react";
 import {
   Autocomplete,
   AutocompleteClear,
-  AutocompleteContent,
   AutocompleteEmpty,
   AutocompleteError,
   AutocompleteInput,
@@ -38,27 +37,25 @@ function ComponentMock({
   return (
     <Autocomplete isLoading={isLoading} isError={isError} {...props}>
       {label && <AutocompleteLabel>Test Label</AutocompleteLabel>}
-      <AutocompleteContent>
-        <AutocompleteInput
-          data-testid="search-input"
-          onSearchChange={handleSearch}
-        >
-          <AutocompleteClear data-testid="clear-button" />
-        </AutocompleteInput>
-        <AutocompleteError>Error occurred</AutocompleteError>
-        <AutocompleteList>
-          {options.map((option) => (
-            <AutocompleteItem
-              key={option.value}
-              value={option.value}
-              data-testid={`option-${option.value}`}
-            >
-              {option.label}
-            </AutocompleteItem>
-          ))}
-          <AutocompleteEmpty />
-        </AutocompleteList>
-      </AutocompleteContent>
+      <AutocompleteInput
+        data-testid="search-input"
+        onSearchChange={handleSearch}
+      >
+        <AutocompleteClear data-testid="clear-button" />
+      </AutocompleteInput>
+      <AutocompleteError>Error occurred</AutocompleteError>
+      <AutocompleteList>
+        {options.map((option) => (
+          <AutocompleteItem
+            key={option.value}
+            value={option.value}
+            data-testid={`option-${option.value}`}
+          >
+            {option.label}
+          </AutocompleteItem>
+        ))}
+        <AutocompleteEmpty />
+      </AutocompleteList>
 
       {children}
     </Autocomplete>

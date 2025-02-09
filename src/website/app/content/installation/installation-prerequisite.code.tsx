@@ -14,6 +14,7 @@ export function InstallationPrerequisiteCode() {
       <InstallationBlockTitle>Prerequisite</InstallationBlockTitle>
       <InstallationBlockContent>
         <InstallationBlockDescription>
+          The autocomplete is built on top of the shadcn/ui components.{" "}
           The following steps assumes that your project already has the base
           tools/setup (tailwind, cn) and ui components installed.
           <br/>
@@ -23,7 +24,7 @@ export function InstallationPrerequisiteCode() {
             href="https://ui.shadcn.com/docs/installation"
             className="text-foreground transition-colors hover:text-muted-foreground"
           >
-            shadcn/ui installation guide{" "}
+            official shadcn/ui installation guide{" "}
           </a>
           and adding both{" "}
           <CodeBlock
