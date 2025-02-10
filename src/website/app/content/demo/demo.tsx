@@ -7,7 +7,6 @@ import { Hero, HeroDescription, HeroTitle } from "../../components/hero";
 import { AsyncPlayground } from "../../components/playground/async-playground";
 import { PlaygroundOptions } from "../../components/playground/playground-options";
 import { SyncPlayground } from "../../components/playground/sync-playground";
-import { Installation } from "../installation/installation";
 import { useDemo } from "./demo.context";
 
 export function Demo() {
@@ -61,8 +60,6 @@ export function Demo() {
       <div className={cn("block", playground.async && "hidden")}>
         <SyncExampleUsageCode />
       </div>
-
-      <Installation />
     </div>
   );
 }

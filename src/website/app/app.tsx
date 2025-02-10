@@ -4,6 +4,7 @@ import { ThemeToggler } from "./components/theme/theme-toggler";
 import { ThemeProvider } from "./components/theme/theme.context";
 import { Demo } from "./content/demo/demo";
 import { DemoProvider } from "./content/demo/demo.context";
+import { Installation } from "./content/installation/installation";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <DemoProvider>
           <Demo />
         </DemoProvider>
+        <Installation />
         <Footer />
       </Layout>
     </ThemeProvider>

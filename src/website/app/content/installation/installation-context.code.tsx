@@ -97,13 +97,15 @@ html`  import {
     value: string;
   };
 
+  type AutocompleteResults = Map<string, AutocompleteItemShape>;
+
   type AutocompleteContextValue = {
     async: boolean;
     isOpen: boolean;
     isLoading: boolean;
     isEmpty: boolean;
     isError: boolean;
-    results: Array<AutocompleteItemShape>;
+    results: AutocompleteResults;
     searchValue: string;
     selectedValue: string | null;
     canSelect: (value?: string) => boolean;
@@ -111,7 +113,7 @@ html`  import {
     handleSearch: (value: string) => void;
     handleSelect: (value: string | null) => void;
     setIsOpen: (open: boolean) => void;
-    setResults: (results: Array<AutocompleteItemShape>) => void;
+    setResults: (results: AutocompleteResults) => void;
   };
 
   const AutocompleteContext = createContext<AutocompleteContextValue | null>(
@@ -166,8 +168,8 @@ html`  import {
 
     const handleSearchChange = useCallback(
       (value: string) => {
-        if (!value.length && params.results.length) {
-          params.setResults([]);
+        if (!value.length && params.results.size) {
+          params.setResults(new Map());
         }
 
         if (!params.isOpen && value.length) {
@@ -198,18 +200,22 @@ html`  import {
 
     const handleSelect = useCallback(
       (value: string | null) => {
-        const item = results.find((item) => item.value === value);
-        if (!item) return;
+        if (!value || !results.has(value)) return;
 
         setSelectedValue(value);
-        setResults([item]);
         onSelectChange?.(value);
+
+        const item = results.get(value);
+
+        if (item) {
+          setResults(new Map([[value, item]]));
+        }
       },
       [results, setResults, onSelectChange, setSelectedValue],
     );
 
     const canSelect = useCallback(
-      (value?: string) => results.some((item) => item.value === value),
+      (value?: string) => !!value && results.has(value),
       [results],
     );
 
@@ -224,7 +230,7 @@ html`  import {
   function useIsEmpty(
     params: Pick<
       AutocompleteContextValue,
-      "isLoading" | "results" | "searchValue"
+      "isLoading" | "searchValue" | "results"
     >,
   ): boolean {
     const { isLoading, results, searchValue } = params;
@@ -233,7 +239,7 @@ html`  import {
       if (isLoading) {
         return false;
       }
-      return searchValue.length > 0 && results.length === 0;
+      return searchValue.length > 0 && results.size === 0;
     }, [isLoading, searchValue, results]);
 
     return isEmpty;
@@ -275,7 +281,7 @@ html`  import {
       onSelectChange,
     } = props;
 
-    const [results, setResults] = useState<Array<AutocompleteItemShape>>([]);
+    const [results, setResults] = useState<AutocompleteResults>(new Map());
 
     const [isOpen, setIsOpen] = useIsOpen({ open, defaultOpen, onOpenChange });
 
@@ -286,12 +292,6 @@ html`  import {
       results,
       setResults,
       onSearchChange,
-      // onSearchChange: (value) => {
-      //   if (selectedValue) {
-      //     setSelectedValue(null);
-      //   }
-      //   onSearchChange?.(value);
-      // },
     });
 
     const { selectedValue, setSelectedValue, handleSelect, canSelect } =
@@ -330,7 +330,7 @@ html`  import {
           setIsOpen(false);
           setSelectedValue(null);
           setSearchValue("");
-          setResults([]);
+          setResults(new Map());
         },
       };
     }, [
