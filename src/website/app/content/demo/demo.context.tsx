@@ -2,9 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -22,7 +20,6 @@ import {
 } from "../../lib/constants";
 import { usersMock } from "../../lib/mocks";
 import { fetchTmdbMovies } from "../../lib/tmdb-api";
-import { wait } from "../../lib/wait";
 
 type PlaygroundOption =
   | typeof PLAYGROUND_OUTPUT_KEY
@@ -78,23 +75,6 @@ function DemoProvider({ children }: { children: ReactNode }) {
   const [showOutput, setShowOutput] = useState(getStoragePlaygroundOutputValue);
   const [showLabel, setShowLabel] = useState(false);
   const [asyncMode, setAsyncMode] = useState(true);
-
-  const hasFakedLoading = useRef(false);
-
-  const fakeLoader = useCallback(async () => {
-    setIsLoading(true);
-    await wait(1500);
-    setIsLoading(false);
-    hasFakedLoading.current = true;
-  }, [setIsLoading, hasFakedLoading]);
-
-  useEffect(() => {
-    if (!asyncMode) return;
-
-    if (hasFakedLoading.current === false) {
-      fakeLoader();
-    }
-  }, [asyncMode, fakeLoader]);
 
   const handleSearch = useCallback(
     async (search: string) => {
