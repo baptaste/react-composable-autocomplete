@@ -7,8 +7,8 @@ import { InstallationTailwindAnimateCode } from "./installation-tailwind-animate
 
 export function Installation() {
   return (
-    <div className="mt-12 flex w-full flex-col">
-      <h1 className="mb-10 border-b pb-2 text-3xl">Installation</h1>
+    <div className="flex w-full flex-col">
+      <h1 className="mb-6 text-xl text-foreground">Installation</h1>
       <InstallationPrerequisiteCode />
       <InstallationTailwindAnimateCode />
       <InstallationClickOutsideHookCode />

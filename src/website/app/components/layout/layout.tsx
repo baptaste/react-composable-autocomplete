@@ -7,7 +7,7 @@ export function Layout({ children }: { children: ReactNode }) {
     <div
       className={cn(
         "container relative mx-auto",
-        "flex flex-col md:items-center",
+        "flex flex-col gap-y-12 md:items-center",
         "min-h-dvh w-screen",
         "bg-background text-foreground",
         "px-6 pb-40",

@@ -12,7 +12,7 @@ export function InstallationPrerequisiteCode() {
   return (
     <InstallationBlock>
       <InstallationBlockTitle>Prerequisite</InstallationBlockTitle>
-      <InstallationBlockContent>
+      <InstallationBlockContent className="mb-0">
         <InstallationBlockDescription>
           The autocomplete is built on top of the shadcn/ui components.{" "}
           The following steps assumes that your project already has the base

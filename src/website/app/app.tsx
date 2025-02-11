@@ -5,6 +5,7 @@ import { ThemeProvider } from "./components/theme/theme.context";
 import { Demo } from "./content/demo/demo";
 import { DemoProvider } from "./content/demo/demo.context";
 import { Installation } from "./content/installation/installation";
+import { PropsBlock } from "./content/props/props-block";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <DemoProvider>
           <Demo />
         </DemoProvider>
+        <PropsBlock />
         <Installation />
         <Footer />
       </Layout>
