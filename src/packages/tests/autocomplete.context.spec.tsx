@@ -72,27 +72,27 @@ describe("Autocomplete Context", () => {
   });
 
   test("search functionality", async () => {
-    const onSearchChangeMock = vi.fn();
-    renderWithProvider({ onSearchChange: onSearchChangeMock });
+    const onSearchMock = vi.fn();
+    renderWithProvider({ onSearch: onSearchMock });
 
     const input = screen.getByRole("combobox");
 
     await userEvent.type(input, "test");
 
-    expect(onSearchChangeMock).toHaveBeenCalledWith("t");
-    expect(onSearchChangeMock).toHaveBeenCalledWith("te");
-    expect(onSearchChangeMock).toHaveBeenCalledWith("tes");
-    expect(onSearchChangeMock).toHaveBeenCalledWith("test");
+    expect(onSearchMock).toHaveBeenCalledWith("t");
+    expect(onSearchMock).toHaveBeenCalledWith("te");
+    expect(onSearchMock).toHaveBeenCalledWith("tes");
+    expect(onSearchMock).toHaveBeenCalledWith("test");
 
-    expect(onSearchChangeMock).toHaveBeenCalledTimes(4);
+    expect(onSearchMock).toHaveBeenCalledTimes(4);
 
     expect(screen.getByTestId("search-value").textContent).toBe("test");
     expect(screen.getByTestId("is-open").textContent).toBe("true");
   });
 
   test("selection functionality", async () => {
-    const onSelectChangeMock = vi.fn();
-    renderWithProvider({ onSelectChange: onSelectChangeMock });
+    const onSelectMock = vi.fn();
+    renderWithProvider({ onSelect: onSelectMock });
 
     // Open dropdown
     const input = screen.getByRole("combobox");
@@ -108,9 +108,9 @@ describe("Autocomplete Context", () => {
     const option = screen.getByText("Option 1");
     await userEvent.click(option);
 
-    // Verify onSelectChange was called with correct value
-    expect(onSelectChangeMock).toHaveBeenCalledWith("1");
-    expect(onSelectChangeMock).toHaveBeenCalledTimes(1);
+    // Verify onSelect was called with correct value
+    expect(onSelectMock).toHaveBeenCalledWith("1");
+    expect(onSelectMock).toHaveBeenCalledTimes(1);
 
     // Verify context state was updated
     expect(screen.getByTestId("selected-value").textContent).toBe("1");

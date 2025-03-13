@@ -57,13 +57,13 @@ const props: Array<PropItemProps> = [
     defaultValue: "undefined",
   },
   {
-    name: "onSearchChange",
+    name: "onSearch",
     type: "(search: string) => void",
     description: "Sets search value of the autocomplete.",
     defaultValue: "undefined",
   },
   {
-    name: "onSelectChange",
+    name: "onSelect",
     type: "(value: string | null) => void",
     description: "Sets selected value of the autocomplete.",
     defaultValue: "undefined",

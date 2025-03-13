@@ -18,7 +18,7 @@ export function AsyncExampleUsageCode({ className }: { className?: string }) {
 
 const exampleUsageCode =
 html`  <Autocomplete isLoading={isLoading} isError={isError}>
-    <AutocompleteInput onSearchChange={handleSearch}>
+    <AutocompleteInput onSearch={handleSearch}>
       <AutocompleteClear onClear={handleClear} />
     </AutocompleteInput>
     <AutocompleteList>
@@ -26,7 +26,7 @@ html`  <Autocomplete isLoading={isLoading} isError={isError}>
         <AutocompleteItem
           key={movie.value}
           value={movie.value}
-         onSelectChange={handleSelect}
+         onSelect={handleSelect}
         >
           {movie.label}
         </AutocompleteItem>
@@ -42,7 +42,7 @@ html`  <Autocomplete isLoading={isLoading} isError={isError}>
 const exampleUsageWithLabelCode =
 html`  <Autocomplete isLoading={isLoading} isError={isError}>
     <AutocompleteLabel>Search for a movie</AutocompleteLabel>
-    <AutocompleteInput onSearchChange={handleSearch}>
+    <AutocompleteInput onSearch={handleSearch}>
       <AutocompleteClear onClear={handleClear} />
     </AutocompleteInput>
     <AutocompleteList>
@@ -50,7 +50,7 @@ html`  <Autocomplete isLoading={isLoading} isError={isError}>
         <AutocompleteItem
           key={movie.value}
          value={movie.value}
-         onSelectChange={handleSelect}
+         onSelect={handleSelect}
         >
           {movie.label}
         </AutocompleteItem>

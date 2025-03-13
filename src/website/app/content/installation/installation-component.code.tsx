@@ -24,14 +24,16 @@ export function InstallationComponentCode() {
 
 const componentInstallationCode =
 html`  import {
+    Children,
     forwardRef,
     Fragment,
+    isValidElement,
     useCallback,
     useEffect,
     useImperativeHandle,
     useRef,
-    type ComponentPropsWithoutRef,
-    type KeyboardEvent,
+   type ComponentPropsWithoutRef,
+   type KeyboardEvent,
    type MouseEvent,
    type PropsWithChildren,
   } from "react";
@@ -53,6 +55,7 @@ html`  import {
   } from "../ui/command";
   import { Label } from "../ui/label";
   import {
+    AutocompleteItemShape,
     AutocompleteProvider,
     useAutocomplete,
     type AutocompleteProviderProps,
@@ -114,7 +117,7 @@ html`  import {
     const contentRef = useRef<HTMLDivElement>(null);
     const { isOpen, setIsOpen } = useAutocomplete();
 
-    useImperativeHandle(ref, () => contentRef.current as HTMLDivElement);
+    useImperativeHandle(ref, () => contentRef.current!);
 
     useOnClickOutside(contentRef, () => {
       if (isOpen) {
@@ -142,7 +145,7 @@ html`  import {
       "onValueChange" | "defaultValue" | "value"
     > & {
       searchValue?: string;
-      onSearchChange?: (search: string) => void;
+      onSearch?: (search: string) => void;
     }
   >(
     (
@@ -152,7 +155,7 @@ html`  import {
         searchValue: searchValueProp,
         id,
         placeholder = "Type to search...",
-        onSearchChange,
+        onSearch,
         ...props
       },
       ref,
@@ -172,19 +175,21 @@ html`  import {
       const inputValue =
         searchValue.length > 0
           ? searchValue
-          : ((selectedValue && results.get(selectedValue)?.label) ?? "");
+          : selectedValue !== null
+            ? results.get(selectedValue)?.label
+            : "";
 
       const handleSearchChange = (search: string) => {
         handleSearch(search);
-        onSearchChange?.(search);
+        onSearch?.(search);
       };
 
       const handleTabKeyPress = useCallback(
         (e: KeyboardEvent<HTMLInputElement>) => {
           if (e.key !== "Tab") return;
 
-          const firstResultItem = results.values().next().value;
-          handleSelect(firstResultItem?.value ?? null);
+          const firstResult = results.values().next().value;
+          handleSelect(firstResult?.value ?? null);
         },
         [results, handleSelect],
       );
@@ -254,36 +259,52 @@ html`  import {
     HTMLDivElement,
     ComponentPropsWithoutRef<typeof CommandGroup>
   >(({ children, className, ...props }, ref) => {
-    const listRef = useRef<HTMLDivElement>(null);
+    const {
+      async,
+      isOpen,
+      isError,
+      isLoading,
+      isEmpty,
+      searchValue,
+      results,
+      setResults,
+    } = useAutocomplete();
 
-    const { async, isOpen, isError, isLoading, searchValue, setResults } =
-      useAutocomplete();
+    const listRef = useRef<HTMLDivElement>(null);
+    const cachedResults = useRef<Array<AutocompleteItemShape>>([]);
 
     const state = isError ? "closed" : isOpen || isLoading ? "open" : "closed";
 
-    useEffect(() => {
-      if (isLoading || !isOpen || !listRef?.current) return;
-
-      const nodeResults = Array.from(
-        listRef.current.querySelectorAll("[data-autocomplete-item]"),
+    const getNodeResults = useCallback(() => {
+      return Array.from(
+        listRef.current?.querySelectorAll("[data-autocomplete-item]") ?? [],
       ).map((item) => ({
         value: (item as HTMLElement).dataset.value ?? "",
         label: (item as HTMLElement).textContent ?? "",
-      }));
+      })) as AutocompleteItemShape[];
+    }, []);
+
+    useEffect(() => {
+      if (listRef.current) {
+        cachedResults.current = getNodeResults();
+      }
+    }, [getNodeResults]);
+
+    useEffect(() => {
+      if (!isOpen) return;
+      if (!searchValue.length) return;
+      if (isLoading) return;
+
+      let results: AutocompleteItemShape[] = getNodeResults();
 
       if (!async) {
-        // Manual filter results based on search value
-        const filteredResults = nodeResults.filter((item) =>
+        results = cachedResults.current.filter((item) =>
           item.label.toLowerCase().includes(searchValue.toLowerCase()),
-        );
-
-        return void setResults(
-          new Map(filteredResults.map((item) => [item.value, item])),
         );
       }
 
-      setResults(new Map(nodeResults.map((item) => [item.value, item])));
-    }, [children, async, isOpen, isLoading, searchValue, setResults]);
+      setResults(new Map(results.map((item) => [item.value, item])));
+    }, [async, isOpen, isLoading, searchValue, getNodeResults]);
 
     return (
       <CommandGroup
@@ -303,7 +324,17 @@ html`  import {
         {...props}
       >
         <CommandList ref={listRef} className="max-h-[168px]">
-          {children}
+          {async
+            ? children
+            : Children.map(children, (child) => {
+                if (!searchValue || isEmpty) {
+                  return child;
+                }
+                if (isValidElement(child) && results.has(child.props.value)) {
+                  return child;
+                }
+                return null;
+              })}
         </CommandList>
       </CommandGroup>
     );
@@ -311,10 +342,8 @@ html`  import {
 
   const AutocompleteItem = forwardRef<
     HTMLDivElement,
-    Omit<ComponentPropsWithoutRef<typeof CommandItem>, "onSelect"> & {
-      onSelectChange?: (value: string) => void;
-    }
-  >(({ children, className, value, onSelectChange, ...props }, ref) => {
+    ComponentPropsWithoutRef<typeof CommandItem>
+  >(({ children, className, value, onSelect, ...props }, ref) => {
     const {
       async,
       isLoading,
@@ -325,12 +354,9 @@ html`  import {
       handleSelect,
     } = useAutocomplete();
 
-    // Sync items state only
-    const hidden = !async && isOpen && !canSelect(value);
-
     const handleSelectChange = (value: string) => {
       handleSelect(value);
-      onSelectChange?.(value);
+      onSelect?.(value);
     };
 
     if (isLoading || (!async && (isEmpty || isError))) {
@@ -343,7 +369,11 @@ html`  import {
         data-autocomplete-item=""
         value={value?.toString()}
         onSelect={handleSelectChange}
-        className={cn("cursor-pointer px-3 py-2", { hidden }, className)}
+        className={cn(
+          "cursor-pointer px-3 py-2",
+          { hidden: !async && isOpen && !canSelect(value) },
+          className,
+        )}
         {...props}
       >
         {children}
@@ -372,20 +402,24 @@ html`  import {
 
   const AutocompleteLoading = forwardRef<
     HTMLUListElement,
-    { className?: string; placeholders?: number }
-  >(({ className, placeholders = 3, ...props }, ref) => {
+    ComponentPropsWithoutRef<"ul"> & {
+      className?: string;
+      loaders?: number;
+      loaderClassName?: string;
+    }
+  >(({ className, loaders = 3, loaderClassName, ...props }, ref) => {
     const { async, isLoading, isEmpty } = useAutocomplete();
 
     if (!async || !isLoading || isEmpty) return null;
 
     return (
-      <ul ref={ref} className="space-y-1.5" {...props}>
-        {Array.from({ length: placeholders }).map((_, index) => (
+      <ul ref={ref} className={cn("space-y-1.5", className)} {...props}>
+        {Array.from({ length: loaders }).map((_, index) => (
           <li
             key={index}
             className={cn(
               "duration-800 h-9 rounded-md bg-accent motion-safe:animate-pulse",
-              className,
+              loaderClassName,
             )}
           />
         ))}

@@ -37,10 +37,7 @@ function ComponentMock({
   return (
     <Autocomplete isLoading={isLoading} isError={isError} {...props}>
       {label && <AutocompleteLabel>Test Label</AutocompleteLabel>}
-      <AutocompleteInput
-        data-testid="search-input"
-        onSearchChange={handleSearch}
-      >
+      <AutocompleteInput data-testid="search-input" onSearch={handleSearch}>
         <AutocompleteClear data-testid="clear-button" />
       </AutocompleteInput>
       <AutocompleteError>Error occurred</AutocompleteError>

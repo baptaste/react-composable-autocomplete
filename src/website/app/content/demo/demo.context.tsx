@@ -38,7 +38,7 @@ type DemoContextValue = {
   handleSelect: (value: string | null) => void;
   handleClear: () => void;
 
-  playground: Record<PlaygroundOption, boolean | "disabled">;
+  playground: Record<PlaygroundOption, boolean | undefined>;
   updatePlayground: (option: PlaygroundOption, value: boolean) => void;
 };
 
@@ -78,25 +78,14 @@ function DemoProvider({ children }: { children: ReactNode }) {
 
   const handleSearch = useCallback(
     async (search: string) => {
-      if (!asyncMode) {
-        if (!search.length) {
-          return void setData(usersMock);
-        }
-        return void setData(
-          data.filter((item) =>
-            item.label.toLowerCase().includes(search.toLowerCase()),
-          ),
-        );
-      }
+      if (!asyncMode) return;
 
-      if (!search.length) {
-        return void setData([]);
-      }
+      if (!search.length) return void setData([]);
 
       try {
         setIsLoading(true);
         const data = await fetchTmdbMovies(search);
-        setData(data ?? []);
+        setData(data);
       } catch (error: unknown) {
         console.error(error);
         setIsError(true);
@@ -104,13 +93,13 @@ function DemoProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [asyncMode, data],
+    [asyncMode],
   );
 
   const handleSelect = useCallback(
     (value: string | null) => {
       const item = data.find(
-        (item) => item.value.toString() === value || item.label === value,
+        (item) => item.value === value || item.label === value,
       );
 
       if (item) {
@@ -120,26 +109,25 @@ function DemoProvider({ children }: { children: ReactNode }) {
     [data],
   );
 
-  const playground: Record<PlaygroundOption, boolean | "disabled"> =
-    useMemo(() => {
-      return asyncMode
-        ? {
-            output: showOutput,
-            async: true,
-            label: showLabel,
-            empty: isEmpty,
-            error: isError,
-            loading: isLoading,
-          }
-        : {
-            output: showOutput,
-            async: false,
-            label: showLabel,
-            empty: isEmpty,
-            error: "disabled",
-            loading: "disabled",
-          };
-    }, [asyncMode, showOutput, showLabel, isEmpty, isError, isLoading]);
+  const playground: DemoContextValue["playground"] = useMemo(() => {
+    return asyncMode
+      ? {
+          output: showOutput,
+          async: true,
+          label: showLabel,
+          empty: isEmpty,
+          error: isError,
+          loading: isLoading,
+        }
+      : {
+          output: showOutput,
+          async: false,
+          label: showLabel,
+          empty: isEmpty,
+          error: undefined,
+          loading: undefined,
+        };
+  }, [asyncMode, showOutput, showLabel, isEmpty, isError, isLoading]);
 
   const updatePlayground = useCallback(
     (option: PlaygroundOption, active: boolean) => {
@@ -155,7 +143,8 @@ function DemoProvider({ children }: { children: ReactNode }) {
         case "async": {
           if (!active) {
             setAsyncMode(false);
-            setData(usersMock);
+            // setData(usersMock);
+            // if (!data.length) setData(usersMock);
             if (isError) setIsError(false);
             if (isLoading) setIsLoading(false);
             break;
@@ -178,13 +167,13 @@ function DemoProvider({ children }: { children: ReactNode }) {
         }
         case "empty": {
           setIsEmpty(active);
-          if (active) {
-            setData([]);
-          } else {
-            if (!asyncMode) {
-              setData(usersMock);
-            }
-          }
+          // if (active) {
+          //   setData([]);
+          // } else {
+          //   if (!asyncMode) {
+          //     setData(usersMock);
+          //   }
+          // }
           if (isError) setIsError(false);
           if (isLoading) setIsLoading(false);
           break;
@@ -195,7 +184,7 @@ function DemoProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [isLoading, isError, isEmpty, asyncMode],
+    [isError, isLoading, isEmpty],
   );
 
   const contextValue = useMemo<DemoContextValue>(
@@ -231,6 +220,8 @@ function DemoProvider({ children }: { children: ReactNode }) {
       updatePlayground,
     ],
   );
+
+  // console.log("demo contextValue", contextValue);
 
   return (
     <DemoContext.Provider value={contextValue}>{children}</DemoContext.Provider>

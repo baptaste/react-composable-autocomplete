@@ -15,10 +15,10 @@ export function PlaygroundOptions() {
         <Button
           key={option}
           variant="outline"
-          disabled={state === "disabled"}
+          disabled={state === undefined}
           className={cn(
             "min-w-20 rounded-full text-xs capitalize",
-            state === true && "bg-accent text-accent-foreground",
+            !!state && "bg-accent text-accent-foreground",
           )}
           onClick={() => {
             updatePlayground(option as PlaygroundOption, !state);

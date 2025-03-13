@@ -18,7 +18,7 @@ export function SyncExampleUsageCode({ className }: { className?: string }) {
 
 const exampleUsageCode =
 html`  <Autocomplete async={false}>
-    <AutocompleteInput onSearchChange={handleSearch}>
+    <AutocompleteInput onSearch={handleSearch}>
       <AutocompleteClear onClear={handleClear} />
     </AutocompleteInput>
     <AutocompleteList>
@@ -26,7 +26,7 @@ html`  <Autocomplete async={false}>
         <AutocompleteItem
           key={user.value}
           value={user.value}
-         onSelectChange={handleSelect}
+         onSelect={handleSelect}
         >
           {user.label}
         </AutocompleteItem>
@@ -38,7 +38,7 @@ html`  <Autocomplete async={false}>
 const exampleUsageWithLabelCode =
 html`  <Autocomplete async={false}>
     <AutocompleteLabel>Search for a user</AutocompleteLabel>
-    <AutocompleteInput onSearchChange={handleSearch}>
+    <AutocompleteInput onSearch={handleSearch}>
       <AutocompleteClear onClear={handleClear} />
     </AutocompleteInput>
     <AutocompleteList>
@@ -46,7 +46,7 @@ html`  <Autocomplete async={false}>
         <AutocompleteItem
           key={user.value}
           value={user.value}
-         onSelectChange={handleSelect}
+         onSelect={handleSelect}
         >
           {user.label}
         </AutocompleteItem>

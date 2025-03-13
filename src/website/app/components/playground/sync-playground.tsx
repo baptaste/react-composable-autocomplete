@@ -9,16 +9,16 @@ import {
 } from "@/packages/core/autocomplete/autocomplete";
 
 import { useDemo } from "../../content/demo/demo.context";
+import { usersMock } from "../../lib/mocks";
 
 export function SyncPlayground() {
-  const { data, playground, handleClear, handleSearch, handleSelect } =
-    useDemo();
+  const { playground, handleClear, handleSearch, handleSelect } = useDemo();
 
   return (
     <Autocomplete
       async={false}
       className="md:w-[350px]"
-      onSelectChange={handleSelect}
+      onSelect={handleSelect}
       // Simulate empty state
       open={!!playground.empty || undefined}
       searchValue={playground.empty === true ? "someone" : undefined}
@@ -26,18 +26,15 @@ export function SyncPlayground() {
       {!!playground.label && (
         <AutocompleteLabel>Search for a user</AutocompleteLabel>
       )}
-      <AutocompleteInput
-        placeholder="Alice, Bob..."
-        onSearchChange={handleSearch}
-      >
+      <AutocompleteInput placeholder="Alice, Bob..." onSearch={handleSearch}>
         <AutocompleteClear onClear={handleClear} />
       </AutocompleteInput>
       <AutocompleteList>
-        {data.map((item) => (
+        {usersMock.map((item) => (
           <AutocompleteItem
             key={item.value}
             value={item.value}
-            onSelectChange={handleSelect}
+            onSelect={handleSelect}
           >
             {item.label}
           </AutocompleteItem>

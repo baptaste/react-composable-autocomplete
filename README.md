@@ -8,7 +8,7 @@ A composable autocomplete component for React. Sync or async, built-in loading, 
 
 ```tsx
 <Autocomplete isLoading={isLoading} isError={isError}>
-  <AutocompleteInput onSearchChange={handleSearch}>
+  <AutocompleteInput onSearch={handleSearch}>
     <AutocompleteClear onClear={handleClear} />
   </AutocompleteInput>
   <AutocompleteList>
@@ -16,7 +16,7 @@ A composable autocomplete component for React. Sync or async, built-in loading, 
       <AutocompleteItem
         key={movie.value}
         value={movie.value}
-        onSelectChange={handleSelect}
+        onSelect={handleSelect}
       >
         {movie.label}
       </AutocompleteItem>
@@ -32,7 +32,7 @@ A composable autocomplete component for React. Sync or async, built-in loading, 
 
 ```tsx
 <Autocomplete async={false}>
-  <AutocompleteInput onSearchChange={handleSearch}>
+  <AutocompleteInput onSearch={handleSearch}>
     <AutocompleteClear onClear={handleClear} />
   </AutocompleteInput>
   <AutocompleteList>
@@ -40,7 +40,7 @@ A composable autocomplete component for React. Sync or async, built-in loading, 
       <AutocompleteItem
         key={user.value}
         value={user.value}
-        onSelectChange={handleSelect}
+        onSelect={handleSelect}
       >
         {user.label}
       </AutocompleteItem>
@@ -54,59 +54,59 @@ A composable autocomplete component for React. Sync or async, built-in loading, 
 
 ```ts
 type AutocompleteProviderProps = {
-  /*
+  /**
   Async state of the autocomplete. If true, the autocomplete won't filter the results.
-  Default: true
+  @default: true
   */
   async?: boolean;
 
-  /*
+  /**
   Default open state of the autocomplete.
-  Default: false
+  @default: false
   */
   defaultOpen?: boolean;
 
-  /*
+  /**
   Open state of the autocomplete (controlled).
-  Default: undefined
+  @default: undefined
   */
   open?: boolean;
 
-  /*
+  /**
   Default value of the input.
-  Default: undefined
+  @default: undefined
   */
   defaultValue?: string;
 
-  /*
+  /**
   Loading state of the autocomplete (controlled).
-  Default: false
+  @default: false
   */
   isLoading?: boolean;
 
-  /*
+  /**
   Error state of the autocomplete (controlled).
-  Default: false
+  @default: false
   */
   isError?: boolean;
 
-  /*
+  /**
   Sets open state of the autocomplete (controlled).
-  Default: undefined
+  @default: undefined
    */
   onOpenChange?: (open: boolean) => void;
 
-  /*
+  /**
   Sets search value of the autocomplete.
-  Default: undefined
+  @default: undefined
    */
-  onSearchChange?: (search: string) => void;
+  onSearch?: (search: string) => void;
 
-  /*
+  /**
   Sets selected value of the autocomplete.
-  Default: undefined
+  @default: undefined
    */
-  onSelectChange?: (value: string | null) => void;
+  onSelect?: (value: string | null) => void;
 };
 ```
 

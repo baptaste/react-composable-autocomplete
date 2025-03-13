@@ -28,7 +28,7 @@ export function AsyncPlayground() {
       className="md:w-[350px]"
       isLoading={isLoading}
       isError={isError}
-      onSelectChange={handleSelect}
+      onSelect={handleSelect}
       // Simulate empty state
       open={!!playground.empty || undefined}
       searchValue={playground.empty === true ? "asdfasdf" : undefined}
@@ -36,10 +36,7 @@ export function AsyncPlayground() {
       {!!playground.label && (
         <AutocompleteLabel>Search for a movie</AutocompleteLabel>
       )}
-      <AutocompleteInput
-        placeholder="Search movies..."
-        onSearchChange={handleSearch}
-      >
+      <AutocompleteInput placeholder="Search movies..." onSearch={handleSearch}>
         <AutocompleteClear onClear={handleClear} />
       </AutocompleteInput>
       <AutocompleteList>
@@ -47,7 +44,7 @@ export function AsyncPlayground() {
           <AutocompleteItem
             key={item.value}
             value={item.value}
-            onSelectChange={handleSelect}
+            onSelect={handleSelect}
           >
             {item.label}
           </AutocompleteItem>

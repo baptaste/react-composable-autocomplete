@@ -36,66 +36,69 @@ html`  import {
   } from "react";
 
   type AutocompleteProviderProps = {
-    /*
+    /**
     Async state of the autocomplete. The filter logic is handled by an external source.
     Sets to false to enable the built-in filtering.
-    Default: true
+    @default true
     */
     async?: boolean;
 
-    /*
+    /**
     Default open state of the autocomplete.
-    Default: false
+    @default false
     */
     defaultOpen?: boolean;
 
-    /*
+    /**
     Open state of the autocomplete (controlled).
-    Default: undefined
+    @default undefined
     */
     open?: boolean;
 
-    /*
+    /**
     Search value of the input (controlled).
-    Default: undefined
+    @default undefined
     */
     searchValue?: string;
 
-    /*
+    /**
     Loading state of the autocomplete (controlled).
-    Default: false
+    @default false
     */
     isLoading?: boolean;
 
-    /*
+    /**
     Error state of the autocomplete (controlled).
-    Default: false
+    @default false
     */
     isError?: boolean;
 
-    /*
-    Sets open state of the autocomplete (controlled).
-    Default: undefined
+    /**
+    Sets search value of the autocomplete.
+    @default undefined
+    */
+    onSearch?: (search: string) => void;
+
+    /**
+    Sets selected value of the autocomplete.
+    @default undefined
+    */
+    onSelect?: (value: string | null) => void;
+
+    /**
+    Event handler for open state change (controlled).
+    @default undefined
     */
     onOpenChange?: (open: boolean) => void;
 
-    /*
-    Sets search value of the autocomplete.
-    Default: undefined
+    /**
+    Event handler for results change.
+    @default undefined
     */
-    onSearchChange?: (search: string) => void;
-
-    /*
-    Sets selected value of the autocomplete.
-    Default: undefined
-    */
-    onSelectChange?: (value: string | null) => void;
+    onResultsChange?: (results: Array<AutocompleteItemShape>) => void;
   };
 
-  type AutocompleteItemShape = {
-    label: string;
-    value: string;
-  };
+  type AutocompleteItemShape = { label: string; value: string };
 
   type AutocompleteResults = Map<string, AutocompleteItemShape>;
 
@@ -150,7 +153,7 @@ html`  import {
           _setOpen(open);
         }
       },
-      [_setOpen, params],
+      [params],
     );
 
     return [isOpen, setIsOpen] as const;
@@ -161,7 +164,7 @@ html`  import {
       AutocompleteContextValue,
       "isOpen" | "setIsOpen" | "results" | "setResults"
     > &
-      Pick<AutocompleteProviderProps, "searchValue" | "onSearchChange">,
+      Pick<AutocompleteProviderProps, "searchValue" | "onSearch">,
   ) {
     const [_searchValue, _setSearchValue] = useState<string>("");
     const deferredValue = useDeferredValue(params.searchValue ?? _searchValue);
@@ -171,20 +174,18 @@ html`  import {
         if (!value.length && params.results.size) {
           params.setResults(new Map());
         }
-
         if (!params.isOpen && value.length) {
           params.setIsOpen(true);
         } else if (params.isOpen && !value.length) {
           params.setIsOpen(false);
         }
-
-        if (params.onSearchChange) {
-          params.onSearchChange(value);
+        if (params.onSearch) {
+          params.onSearch(value);
         } else {
           _setSearchValue(value);
         }
       },
-      [params, _setSearchValue],
+      [params],
     );
 
     return [deferredValue, _setSearchValue, handleSearchChange] as const;
@@ -192,10 +193,10 @@ html`  import {
 
   function useSelectedValue(
     params: Pick<AutocompleteContextValue, "results" | "setResults"> & {
-      onSelectChange?: (value: string | null) => void;
+      onSelect?: (value: string | null) => void;
     },
   ) {
-    const { results, setResults, onSelectChange } = params;
+    const { results, setResults, onSelect } = params;
     const [selectedValue, setSelectedValue] = useState<string | null>(null);
 
     const handleSelect = useCallback(
@@ -203,15 +204,13 @@ html`  import {
         if (!value || !results.has(value)) return;
 
         setSelectedValue(value);
-        onSelectChange?.(value);
-
+        onSelect?.(value);
         const item = results.get(value);
-
         if (item) {
           setResults(new Map([[value, item]]));
         }
       },
-      [results, setResults, onSelectChange, setSelectedValue],
+      [results, setResults, onSelect],
     );
 
     const canSelect = useCallback(
@@ -265,44 +264,51 @@ html`  import {
     }, [isOpen, setIsOpen]);
   }
 
-  function AutocompleteProvider(
-    props: PropsWithChildren<AutocompleteProviderProps>,
-  ) {
-    const {
-      async = true,
-      children,
-      open,
-      defaultOpen = false,
-      searchValue: searchValueProp,
-      isLoading = false,
-      isError = false,
-      onOpenChange,
-      onSearchChange,
-      onSelectChange,
-    } = props;
-
+  function AutocompleteProvider({
+    async = true,
+    children,
+    open,
+    defaultOpen = false,
+    isError = false,
+    isLoading = false,
+    searchValue: searchValueProp,
+    onSearch,
+    onSelect,
+    onOpenChange,
+    onResultsChange,
+  }: PropsWithChildren<AutocompleteProviderProps>) {
     const [results, setResults] = useState<AutocompleteResults>(new Map());
+
+    const handleResultsChange = useCallback(
+      (results: AutocompleteResults) => {
+        setResults(results);
+        if (onResultsChange) {
+          onResultsChange(Array.from(results).map(([, item]) => item));
+        }
+      },
+      [onResultsChange],
+    );
 
     const [isOpen, setIsOpen] = useIsOpen({ open, defaultOpen, onOpenChange });
 
     const [searchValue, setSearchValue, handleSearch] = useSearchValue({
       searchValue: searchValueProp,
+      onSearch,
       isOpen,
       setIsOpen,
       results,
       setResults,
-      onSearchChange,
     });
 
     const { selectedValue, setSelectedValue, handleSelect, canSelect } =
       useSelectedValue({
         results,
         setResults,
-        onSelectChange: (value) => {
+        onSelect: (value) => {
           setIsOpen(false);
           setSearchValue("");
-          onSearchChange?.("");
-          onSelectChange?.(value);
+          onSearch?.("");
+          onSelect?.(value);
         },
       });
 
@@ -323,7 +329,7 @@ html`  import {
         selectedValue,
         handleSearch,
         handleSelect,
-        setResults,
+        setResults: handleResultsChange,
         setIsOpen,
         canSelect,
         clearStates: () => {
@@ -346,10 +352,7 @@ html`  import {
       handleSearch,
       handleSelect,
       canSelect,
-      setIsOpen,
-      setSelectedValue,
-      setSearchValue,
-      setResults,
+      handleResultsChange,
     ]);
 
     return (
@@ -359,10 +362,11 @@ html`  import {
     );
   }
 
-  export {
-    type AutocompleteItemShape,
-    type AutocompleteContextValue,
-    type AutocompleteProviderProps,
-    AutocompleteProvider,
-    useAutocomplete,
-  };`;
+  export type {
+    AutocompleteItemShape,
+    AutocompleteResults,
+    AutocompleteContextValue,
+    AutocompleteProviderProps,
+  };
+
+  export { AutocompleteProvider, useAutocomplete };`;
