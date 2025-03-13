@@ -10,7 +10,7 @@ export function Layout({ children }: { children: ReactNode }) {
         "flex flex-col gap-y-12 md:items-center",
         "min-h-dvh w-screen",
         "bg-background text-foreground",
-        "px-6 pb-40",
+        "px-6 pb-20",
         "sm:px-12",
         "xl:px-60",
       )}

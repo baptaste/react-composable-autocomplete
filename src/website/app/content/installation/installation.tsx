@@ -15,7 +15,6 @@ export function Installation() {
       <InstallationCommandCode />
       <InstallationContextCode />
       <InstallationComponentCode />
-      <p>That's it!</p>
     </div>
   );
 }
