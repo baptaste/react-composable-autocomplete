@@ -1,11 +1,11 @@
 import { cn } from "@/packages/core/utils/cn";
 
-import { AsyncExampleUsageCode } from "../../components/example-usage/async-example-usage.code";
-import { SyncExampleUsageCode } from "../../components/example-usage/sync-example-usage.code";
 import { Hero, HeroDescription, HeroTitle } from "../../components/hero";
 import { AsyncPlayground } from "../../components/playground/async-playground";
 import { PlaygroundOptions } from "../../components/playground/playground-options";
 import { SyncPlayground } from "../../components/playground/sync-playground";
+import { AsyncUsageCode } from "../../components/usage/async-usage.code";
+import { SyncUsageCode } from "../../components/usage/sync-usage.code";
 import { useDemo } from "./demo.context";
 
 export function Demo() {
@@ -21,10 +21,10 @@ export function Demo() {
         <PlaygroundOptions />
       </Hero>
       <div className={cn("block", playground.async === false && "hidden")}>
-        <AsyncExampleUsageCode />
+        <AsyncUsageCode />
       </div>
       <div className={cn("block", playground.async === true && "hidden")}>
-        <SyncExampleUsageCode />
+        <SyncUsageCode />
       </div>
     </div>
   );

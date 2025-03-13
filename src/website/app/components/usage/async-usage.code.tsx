@@ -4,19 +4,19 @@ import { cn } from "@/packages/core/utils/cn";
 import { useDemo } from "../../content/demo/demo.context";
 import { CodeBlock } from "../code-block";
 
-export function AsyncExampleUsageCode({ className }: { className?: string }) {
+export function AsyncUsageCode({ className }: { className?: string }) {
   const { playground } = useDemo();
-  const code = playground.label ? exampleUsageWithLabelCode : exampleUsageCode;
+  const code = playground.label ? usageWithLabelCode : usageCode;
 
   return (
     <div className={cn("flex flex-col gap-y-4", className)}>
-      <h1 className="mb-4 text-foreground text-xl">Example usage (async)</h1>
+      <h1 className="mb-4 text-foreground text-xl">Usage (async)</h1>
       <CodeBlock lang="tsx" code={code} />
     </div>
   );
 }
 
-const exampleUsageCode =
+const usageCode =
 html`  <Autocomplete isLoading={isLoading} isError={isError}>
     <AutocompleteInput onSearch={handleSearch}>
       <AutocompleteClear onClear={handleClear} />
@@ -39,7 +39,7 @@ html`  <Autocomplete isLoading={isLoading} isError={isError}>
     <AutocompleteError />
   </Autocomplete>`;
 
-const exampleUsageWithLabelCode =
+const usageWithLabelCode =
 html`  <Autocomplete isLoading={isLoading} isError={isError}>
     <AutocompleteLabel>Search for a movie</AutocompleteLabel>
     <AutocompleteInput onSearch={handleSearch}>
