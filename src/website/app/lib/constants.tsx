@@ -7,8 +7,6 @@ export const STORAGE_ROOT_KEY = "react-composable-autocomplete--";
 
 export const THEME_KEY = "theme";
 
-export const PLAYGROUND_OUTPUT_KEY = "output";
-
 export const PLAYGROUND_ASYNC_MODE_KEY = "async";
 
 export const PLAYGROUND_ERROR_KEY = "error";
