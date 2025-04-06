@@ -35,6 +35,10 @@ html`  import {
     type PropsWithChildren,
   } from "react";
 
+  type AutocompleteResult = { label: string; value: string };
+
+  type AutocompleteHighlight = "include" | "exclude" | false;
+
   type AutocompleteProviderProps = {
     /**
     Async state of the autocomplete. The filter logic is handled by an external source.
@@ -42,6 +46,13 @@ html`  import {
     @default true
     */
     async?: boolean;
+
+    /**
+    Highlight results option.
+    Sets to false to disable highlighting.
+    @default "include"
+    */
+    highlight?: AutocompleteHighlight;
 
     /**
     Default open state of the autocomplete.
@@ -95,20 +106,17 @@ html`  import {
     Event handler for results change.
     @default undefined
     */
-    onResultsChange?: (results: Array<AutocompleteItemShape>) => void;
+    onResultsChange?: (results: Array<AutocompleteResult>) => void;
   };
-
-  type AutocompleteItemShape = { label: string; value: string };
-
-  type AutocompleteResults = Map<string, AutocompleteItemShape>;
 
   type AutocompleteContextValue = {
     async: boolean;
+    highlight: AutocompleteHighlight;
     isOpen: boolean;
     isLoading: boolean;
     isEmpty: boolean;
     isError: boolean;
-    results: AutocompleteResults;
+    results: Map<string, AutocompleteResult>;
     searchValue: string;
     selectedValue: string | null;
     canSelect: (value?: string) => boolean;
@@ -116,7 +124,7 @@ html`  import {
     handleSearch: (value: string) => void;
     handleSelect: (value: string | null) => void;
     setIsOpen: (open: boolean) => void;
-    setResults: (results: AutocompleteResults) => void;
+    setResults: (results: Map<string, AutocompleteResult>) => void;
   };
 
   const AutocompleteContext = createContext<AutocompleteContextValue | null>(
@@ -266,6 +274,7 @@ html`  import {
 
   function AutocompleteProvider({
     async = true,
+    highlight = "include",
     children,
     open,
     defaultOpen = false,
@@ -277,13 +286,15 @@ html`  import {
     onOpenChange,
     onResultsChange,
   }: PropsWithChildren<AutocompleteProviderProps>) {
-    const [results, setResults] = useState<AutocompleteResults>(new Map());
+    const [results, setResults] = useState<Map<string, AutocompleteResult>>(
+      new Map(),
+    );
 
     const handleResultsChange = useCallback(
-      (results: AutocompleteResults) => {
-        setResults(results);
+      (newResults: typeof results) => {
+        setResults(newResults);
         if (onResultsChange) {
-          onResultsChange(Array.from(results).map(([, item]) => item));
+          onResultsChange(Array.from(newResults).map(([, item]) => item));
         }
       },
       [onResultsChange],
@@ -319,6 +330,7 @@ html`  import {
     const contextValue = useMemo<AutocompleteContextValue>(() => {
       return {
         async,
+        highlight,
         isOpen,
         isLoading,
         isEmpty,
@@ -341,6 +353,7 @@ html`  import {
       };
     }, [
       async,
+      highlight,
       isOpen,
       isLoading,
       isEmpty,
@@ -363,8 +376,8 @@ html`  import {
   }
 
   export type {
-    AutocompleteItemShape,
-    AutocompleteResults,
+    AutocompleteResult,
+    AutocompleteHighlight,
     AutocompleteContextValue,
     AutocompleteProviderProps,
   };

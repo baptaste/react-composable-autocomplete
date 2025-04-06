@@ -1,10 +1,10 @@
-import type { AutocompleteItemShape } from "@/packages/core/autocomplete/autocomplete.context";
+import type { AutocompleteResult } from "@/packages/core/autocomplete/autocomplete.context";
 
 import { TMDB_MOVIES_API_URL } from "./constants";
 
 export async function fetchTmdbMovies(
   search = "",
-): Promise<AutocompleteItemShape[]> {
+): Promise<AutocompleteResult[]> {
   const response = await fetch(
     `${TMDB_MOVIES_API_URL}?include_adult=false&language=en-US&query=${search}`,
     {

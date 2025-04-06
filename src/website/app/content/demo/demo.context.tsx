@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 
-import type { AutocompleteItemShape } from "@/packages/core/autocomplete/autocomplete.context";
+import type { AutocompleteResult } from "@/packages/core/autocomplete/autocomplete.context";
 
 import {
   PLAYGROUND_ASYNC_MODE_KEY,
@@ -27,10 +27,10 @@ type PlaygroundOption =
   | typeof PLAYGROUND_LABEL_KEY;
 
 type DemoContextValue = {
-  data: Array<AutocompleteItemShape>;
+  data: Array<AutocompleteResult>;
   isLoading: boolean;
   isError: boolean;
-  setData: (data: Array<AutocompleteItemShape>) => void;
+  setData: (data: Array<AutocompleteResult>) => void;
   handleSearch: (search: string) => void;
   handleSelect: (value: string | null) => void;
   handleClear: () => void;
@@ -52,7 +52,7 @@ function useDemo() {
 }
 
 function DemoProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<Array<AutocompleteItemShape>>([]);
+  const [data, setData] = useState<Array<AutocompleteResult>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isEmpty, setIsEmpty] = useState(false);

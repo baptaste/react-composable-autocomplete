@@ -30,8 +30,9 @@ import {
 } from "../ui/command";
 import { Label } from "../ui/label";
 import {
-  AutocompleteItemShape,
+  AutocompleteHighlight,
   AutocompleteProvider,
+  AutocompleteResult,
   useAutocomplete,
   type AutocompleteProviderProps,
 } from "./autocomplete.context";
@@ -246,7 +247,7 @@ const AutocompleteList = forwardRef<
   } = useAutocomplete();
 
   const listRef = useRef<HTMLDivElement>(null);
-  const cachedResults = useRef<Array<AutocompleteItemShape>>([]);
+  const cachedResults = useRef<Array<AutocompleteResult>>([]);
 
   const state = isError ? "closed" : isOpen || isLoading ? "open" : "closed";
 
@@ -256,7 +257,7 @@ const AutocompleteList = forwardRef<
     ).map((item) => ({
       value: (item as HTMLElement).dataset.value ?? "",
       label: (item as HTMLElement).textContent ?? "",
-    })) as AutocompleteItemShape[];
+    })) as AutocompleteResult[];
   }, []);
 
   useEffect(() => {
@@ -270,7 +271,7 @@ const AutocompleteList = forwardRef<
     if (!searchValue.length) return;
     if (isLoading) return;
 
-    let results: AutocompleteItemShape[] = getNodeResults();
+    let results: AutocompleteResult[] = getNodeResults();
 
     if (!async) {
       results = cachedResults.current.filter((item) =>
@@ -317,44 +318,84 @@ const AutocompleteList = forwardRef<
 
 const AutocompleteItem = forwardRef<
   HTMLDivElement,
-  ComponentPropsWithoutRef<typeof CommandItem>
->(({ children, className, value, onSelect, ...props }, ref) => {
-  const {
-    async,
-    isLoading,
-    isOpen,
-    isEmpty,
-    isError,
-    canSelect,
-    handleSelect,
-  } = useAutocomplete();
-
-  const handleSelectChange = (value: string) => {
-    handleSelect(value);
-    onSelect?.(value);
-  };
-
-  if (isLoading || (!async && (isEmpty || isError))) {
-    return null;
+  ComponentPropsWithoutRef<typeof CommandItem> & {
+    highlight?: AutocompleteHighlight;
   }
+>(
+  (
+    {
+      children,
+      className,
+      value,
+      onSelect,
+      highlight: highlightProp = "include",
+      ...props
+    },
+    ref,
+  ) => {
+    const {
+      async,
+      highlight: highlightCtx,
+      isLoading,
+      isOpen,
+      isEmpty,
+      isError,
+      searchValue,
+      results,
+      canSelect,
+      handleSelect,
+    } = useAutocomplete();
+    const highlight = highlightProp ?? highlightCtx;
 
-  return (
-    <CommandItem
-      ref={ref}
-      data-autocomplete-item=""
-      value={value?.toString()}
-      onSelect={handleSelectChange}
-      className={cn(
-        "cursor-pointer px-3 py-2",
-        { hidden: !async && isOpen && !canSelect(value) },
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </CommandItem>
-  );
-});
+    const handleSelectChange = (value: string) => {
+      handleSelect(value);
+      onSelect?.(value);
+    };
+
+    if (isLoading || (!async && (isEmpty || isError))) {
+      return null;
+    }
+
+    const regex = new RegExp("(" + searchValue + ")", "gi");
+    const result = results.get(value?.toString() ?? "");
+    const label = result?.label ?? "";
+    const parts = label.split(regex);
+
+    return (
+      <CommandItem
+        ref={ref}
+        data-autocomplete-item=""
+        value={value?.toString()}
+        onSelect={handleSelectChange}
+        className={cn(
+          "cursor-pointer px-3 py-2",
+          { hidden: !async && isOpen && !canSelect(value) },
+          className,
+        )}
+        {...props}
+      >
+        {highlight && result ? (
+          <span>
+            {parts.filter(Boolean).map((part, index) => (
+              <span
+                key={index}
+                className={cn(
+                  "font-normal",
+                  highlight === "include" && regex.test(part) && "font-bold",
+                  highlight === "exclude" && !regex.test(part) && "font-bold",
+                )}
+              >
+                {part}
+              </span>
+            ))}
+          </span>
+        ) : (
+          children
+        )}
+      </CommandItem>
+    );
+  },
+);
 
 const AutocompleteEmpty = forwardRef<
   HTMLDivElement,

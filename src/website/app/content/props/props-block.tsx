@@ -21,6 +21,13 @@ const props: Array<PropItemProps> = [
     defaultValue: "true",
   },
   {
+    name: "highlight",
+    type: `"include" | "exclude" | false`,
+    description:
+      "Highlight results option. Sets to false to disable highlighting.",
+    defaultValue: `"include"`,
+  },
+  {
     name: "defaultOpen",
     type: "boolean",
     description: "Default open state of the autocomplete.",
